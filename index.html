@@ -133,7 +133,13 @@
   .cal-cell.today{border-color:var(--pink);font-weight:700;}
   .cal-cell.selected{background:var(--pink-light);border-color:var(--pink);}
   .cal-dots{display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;justify-content:center;}
-  .cal-dots span{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .cal-dots span{width:12px;height:12px;border-radius:4px;flex-shrink:0;}
+  .cal-badges{position:absolute;top:1px;right:1px;display:flex;flex-direction:column;align-items:flex-end;line-height:1;}
+  .cal-badge{font-size:9px;}
+  .cal-reminder{
+    background:#fff6e9;border:1px solid #f0dcb0;border-radius:10px;padding:9px 12px;
+    font-size:12px;color:#a97b1f;margin-bottom:8px;cursor:pointer;line-height:1.5;
+  }
 
   /* filter chips */
   .chip-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;}
@@ -546,7 +552,7 @@
 <script>
 /* ---------- データ ---------- */
 const STORAGE_KEY = 'oshikatsuNoteData_v1';
-const DEFAULT_COLORS = ['#2a78d6','#eb6834','#199e70','#b87700','#d55181','#008300','#4a3aa7','#e34948','#6e6b66'];
+const DEFAULT_COLORS = ['#5082be','#c87d5f','#3fa07e','#a1782b','#bf738f','#4b964b','#766cb2','#c05d5d','#a99e8f'];
 
 let db = loadData();
 
@@ -1187,6 +1193,10 @@ function renderCalendar(){
 
   const itemsByDate = {};
   db.items.forEach(it=>{ (itemsByDate[it.date] = itemsByDate[it.date]||[]).push(it); });
+  const itemsByApplyEnd = {};
+  db.items.forEach(it=>{ if(it.applyEnd && (it.status==='未定'||it.status==='申込中')) (itemsByApplyEnd[it.applyEnd] = itemsByApplyEnd[it.applyEnd]||[]).push(it); });
+  const itemsByResultDate = {};
+  db.items.forEach(it=>{ if(it.resultDate && it.status==='申込中') (itemsByResultDate[it.resultDate] = itemsByResultDate[it.resultDate]||[]).push(it); });
 
   let html = ['日','月','火','水','木','金','土'].map(d=>`<div class="cal-dow">${d}</div>`).join('');
   for(let i=0;i<startDow;i++) html += '<div class="cal-cell blank"></div>';
@@ -1194,18 +1204,34 @@ function renderCalendar(){
     const dstr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayItems = itemsByDate[dstr] || [];
     const dots = dayItems.slice(0,4).map(it=>`<span style="background:${oshiColor(it.oshiId)}"></span>`).join('');
+    const hasDeadline = !!(itemsByApplyEnd[dstr] && itemsByApplyEnd[dstr].length);
+    const hasResult = !!(itemsByResultDate[dstr] && itemsByResultDate[dstr].length);
+    const badges = (hasDeadline?'<span class="cal-badge dl">⏰</span>':'') + (hasResult?'<span class="cal-badge rs">🔔</span>':'');
     const cls = ['cal-cell'];
     if(dstr===todayS) cls.push('today');
     if(dstr===calSelectedDate) cls.push('selected');
-    html += `<div class="${cls.join(' ')}" onclick="selectCalDate('${dstr}')">${d}<div class="cal-dots">${dots}</div></div>`;
+    html += `<div class="${cls.join(' ')}" onclick="selectCalDate('${dstr}')">${badges?`<div class="cal-badges">${badges}</div>`:''}${d}<div class="cal-dots">${dots}</div></div>`;
   }
   document.getElementById('calGrid').innerHTML = html;
 
   if(calSelectedDate){
     document.getElementById('calSelDateLabel').textContent = fmtDate(calSelectedDate) + 'の予定';
     const list = (itemsByDate[calSelectedDate]||[]).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
-    document.getElementById('calDayList').innerHTML = list.length ? list.map(renderItemRow).join('') :
-      `<div class="empty">この日の予定はありません</div><div class="btn-row"><button class="btn ghost" onclick="openItemSheet('${calSelectedDate}')" style="flex:none;padding:8px 16px;">＋ この日に追加</button></div>`;
+    const deadlineExtra = (itemsByApplyEnd[calSelectedDate]||[]).filter(it=>it.date!==calSelectedDate);
+    const resultExtra = (itemsByResultDate[calSelectedDate]||[]).filter(it=>it.date!==calSelectedDate);
+    let extraHtml = '';
+    if(deadlineExtra.length){
+      extraHtml += deadlineExtra.map(it=>`<div class="cal-reminder" onclick="editItem('${it.id}')">⏰ <b>本日締切</b>：${escapeHtml(it.title)}（${fmtShortDate(it.date)}の予定）</div>`).join('');
+    }
+    if(resultExtra.length){
+      extraHtml += resultExtra.map(it=>`<div class="cal-reminder" onclick="editItem('${it.id}')">🔔 <b>本日当落発表</b>：${escapeHtml(it.title)}（${fmtShortDate(it.date)}の予定）</div>`).join('');
+    }
+    const listHtml = list.length ? list.map(renderItemRow).join('') : '';
+    if(!list.length && !extraHtml){
+      document.getElementById('calDayList').innerHTML = `<div class="empty">この日の予定はありません</div><div class="btn-row"><button class="btn ghost" onclick="openItemSheet('${calSelectedDate}')" style="flex:none;padding:8px 16px;">＋ この日に追加</button></div>`;
+    }else{
+      document.getElementById('calDayList').innerHTML = extraHtml + listHtml;
+    }
   }else{
     document.getElementById('calSelDateLabel').textContent = '選択日の予定';
     document.getElementById('calDayList').innerHTML = '<div class="empty">日付をタップして予定を見る</div>';
