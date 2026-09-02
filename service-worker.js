@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oshikatsu-note-v12';
+const CACHE_NAME = 'oshikatsu-note-v13';
 const ASSETS = [
   './',
   './index.html',

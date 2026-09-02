@@ -122,18 +122,20 @@
   .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
   .cal-head .ym{font-size:16px;font-weight:700;}
   .cal-head button{background:var(--pink-light);border:none;color:var(--pink-dark);width:30px;height:30px;border-radius:50%;font-size:14px;}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;}
   .cal-dow{text-align:center;font-size:11px;color:var(--text-sub);padding:4px 0;}
   .cal-cell{
     aspect-ratio:1/1;border-radius:10px;background:var(--bg);
     display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
     padding:4px 2px;font-size:12px;position:relative;cursor:pointer;border:1px solid transparent;
+    min-width:0;overflow:hidden;
   }
   .cal-cell.blank{background:none;}
   .cal-cell.today{border-color:var(--pink);font-weight:700;}
   .cal-cell.selected{background:var(--pink-light);border-color:var(--pink);}
-  .cal-dots{display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;justify-content:center;}
-  .cal-dots span{width:12px;height:12px;border-radius:4px;flex-shrink:0;}
+  .cal-dots{display:flex;gap:2px;margin-top:3px;flex-wrap:nowrap;justify-content:center;min-width:0;max-width:100%;}
+  .cal-dots span{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+  .cal-dots .cal-dot-more{width:auto;height:10px;line-height:10px;font-size:8px;color:var(--text-sub);border-radius:0;background:none!important;flex-shrink:0;}
   .cal-badges{position:absolute;top:1px;right:1px;display:flex;flex-direction:column;align-items:flex-end;line-height:1;}
   .cal-badge{font-size:9px;}
   .cal-reminder{
@@ -1253,7 +1255,7 @@ function renderCalendar(){
   for(let d=1; d<=daysInMonth; d++){
     const dstr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayItems = itemsByDate[dstr] || [];
-    const dots = dayItems.slice(0,4).map(it=>`<span style="background:${oshiColor(it.oshiId)}"></span>`).join('');
+    const dots = dayItems.slice(0,3).map(it=>`<span style="background:${oshiColor(it.oshiId)}"></span>`).join('') + (dayItems.length>3 ? `<span class="cal-dot-more">+${dayItems.length-3}</span>` : '');
     const hasReserve = !!(itemsByReserveEnd[dstr] && itemsByReserveEnd[dstr].length);
     const hasDeadline = !!(itemsByApplyEnd[dstr] && itemsByApplyEnd[dstr].length);
     const hasResult = !!(itemsByResultDate[dstr] && itemsByResultDate[dstr].length);
