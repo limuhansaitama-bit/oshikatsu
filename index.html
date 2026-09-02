@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ff5c8a">
+<title>推し活ノート</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="推し活ノート">
+<style>
+  :root{
+    --pink:#ff5c8a;
+    --pink-dark:#e0447a;
+    --pink-light:#ffe3ec;
+    --purple:#8a6cff;
+    --bg:#fff7fa;
+    --card:#ffffff;
+    --text:#3a2e35;
+    --text-sub:#8a7a82;
+    --border:#f3d9e3;
+    --green:#3ecf8e;
+    --yellow:#ffb648;
+    --red:#ff6b6b;
+    --gray:#c9bfc4;
+    --radius:16px;
+    --shadow:0 2px 12px rgba(200,80,130,0.10);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding-bottom:76px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  header.appbar{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(135deg,var(--pink),var(--purple));
+    color:#fff;
+    padding:14px 16px calc(14px + env(safe-area-inset-top,0px));
+    padding-top:calc(14px + env(safe-area-inset-top,0px));
+    display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 2px 10px rgba(150,50,100,0.25);
+  }
+  header.appbar h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.5px;}
+  header.appbar .sub{font-size:11px;opacity:.85;margin-top:2px;}
+  header.appbar button.icon-btn{
+    background:rgba(255,255,255,0.2);border:none;color:#fff;
+    width:34px;height:34px;border-radius:50%;font-size:16px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  main{padding:14px 14px 20px;max-width:640px;margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block;animation:fadein .15s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .card{
+    background:var(--card);border-radius:var(--radius);
+    padding:16px;margin-bottom:14px;box-shadow:var(--shadow);
+    border:1px solid var(--border);
+  }
+  .card h2{font-size:14px;margin:0 0 10px;color:var(--pink-dark);display:flex;align-items:center;justify-content:space-between;}
+  .card h2 .cnt{font-size:12px;color:var(--text-sub);font-weight:400;}
+
+  .empty{color:var(--text-sub);font-size:13px;text-align:center;padding:18px 0;}
+
+  /* dashboard */
+  .stat-row{display:flex;gap:10px;margin-bottom:14px;}
+  .stat{flex:1;background:var(--card);border-radius:var(--radius);padding:14px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--border);}
+  .stat .num{font-size:20px;font-weight:700;color:var(--pink-dark);}
+  .stat .lbl{font-size:11px;color:var(--text-sub);margin-top:2px;}
+
+  .item-row{
+    display:flex;align-items:center;gap:10px;padding:10px 0;
+    border-bottom:1px solid var(--border);cursor:pointer;
+  }
+  .item-row:last-child{border-bottom:none;}
+  .oshi-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .item-date{font-size:11px;color:var(--text-sub);width:44px;flex-shrink:0;line-height:1.3;}
+  .item-main{flex:1;min-width:0;}
+  .item-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .item-meta{font-size:11px;color:var(--text-sub);margin-top:2px;}
+  .badge{
+    font-size:10px;padding:3px 8px;border-radius:20px;font-weight:600;flex-shrink:0;white-space:nowrap;
+  }
+  .badge.status-未定{background:#eee;color:#888;}
+  .badge.status-申込中{background:#fff2d9;color:#c98a1d;}
+  .badge.status-当選{background:#e3f9ef;color:#1fa870;}
+  .badge.status-落選{background:#ffe6e6;color:#d64545;}
+  .badge.status-確定{background:#e6efff;color:#3a6fd8;}
+  .badge.status-終了{background:#f0f0f0;color:#999;}
+
+  /* tabbar */
+  nav.tabbar{
+    position:fixed;bottom:0;left:0;right:0;z-index:20;
+    background:#fff;border-top:1px solid var(--border);
+    display:flex;padding-bottom:env(safe-area-inset-bottom,0px);
+    box-shadow:0 -2px 10px rgba(150,50,100,0.08);
+  }
+  nav.tabbar button{
+    flex:1;background:none;border:none;padding:8px 2px 6px;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    color:var(--text-sub);font-size:10px;
+  }
+  nav.tabbar button .ic{font-size:19px;}
+  nav.tabbar button.active{color:var(--pink-dark);font-weight:700;}
+
+  .fab{
+    position:fixed;right:18px;bottom:88px;z-index:25;
+    width:56px;height:56px;border-radius:50%;border:none;
+    background:linear-gradient(135deg,var(--pink),var(--purple));
+    color:#fff;font-size:26px;box-shadow:0 4px 14px rgba(200,60,120,0.4);
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* calendar */
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .cal-head .ym{font-size:16px;font-weight:700;}
+  .cal-head button{background:var(--pink-light);border:none;color:var(--pink-dark);width:30px;height:30px;border-radius:50%;font-size:14px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-dow{text-align:center;font-size:11px;color:var(--text-sub);padding:4px 0;}
+  .cal-cell{
+    aspect-ratio:1/1;border-radius:10px;background:var(--bg);
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+    padding:4px 2px;font-size:12px;position:relative;cursor:pointer;border:1px solid transparent;
+  }
+  .cal-cell.blank{background:none;}
+  .cal-cell.today{border-color:var(--pink);font-weight:700;}
+  .cal-cell.selected{background:var(--pink-light);border-color:var(--pink);}
+  .cal-dots{display:flex;gap:2px;margin-top:3px;flex-wrap:wrap;justify-content:center;}
+  .cal-dots span{width:5px;height:5px;border-radius:50%;}
+
+  /* filter chips */
+  .chip-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;}
+  .chip{
+    flex-shrink:0;padding:6px 12px;border-radius:20px;background:#fff;
+    border:1px solid var(--border);font-size:12px;color:var(--text-sub);white-space:nowrap;
+  }
+  .chip.active{background:var(--pink);color:#fff;border-color:var(--pink);}
+
+  /* forms */
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12px;color:var(--text-sub);margin-bottom:5px;font-weight:600;}
+  .field input[type=text],.field input[type=date],.field input[type=time],.field input[type=number],.field select,.field textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;
+    font-size:14px;background:#fff;color:var(--text);font-family:inherit;
+  }
+  .field textarea{resize:vertical;min-height:50px;}
+  .seg{display:flex;gap:6px;flex-wrap:wrap;}
+  .seg button{
+    flex:1;min-width:60px;padding:9px 6px;border-radius:10px;border:1px solid var(--border);
+    background:#fff;font-size:12px;color:var(--text-sub);
+  }
+  .seg button.active{background:var(--pink);border-color:var(--pink);color:#fff;font-weight:700;}
+  .color-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .color-swatch{width:30px;height:30px;border-radius:50%;border:3px solid transparent;}
+  .color-swatch.active{border-color:#333;}
+
+  /* modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(40,20,30,0.4);z-index:50;
+    display:flex;align-items:flex-end;justify-content:center;
+  }
+  .overlay.hidden{display:none;}
+  .sheet{
+    background:#fff;width:100%;max-width:640px;border-radius:20px 20px 0 0;
+    max-height:88vh;overflow-y:auto;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));
+    animation:slideup .18s ease;
+  }
+  @keyframes slideup{from{transform:translateY(30px);opacity:0;}to{transform:none;opacity:1;}}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .sheet-head h3{margin:0;font-size:16px;}
+  .sheet-head button{background:var(--bg);border:none;width:28px;height:28px;border-radius:50%;color:var(--text-sub);font-size:14px;}
+  .btn-row{display:flex;gap:10px;margin-top:16px;}
+  .btn{flex:1;padding:12px;border-radius:12px;border:none;font-size:14px;font-weight:700;}
+  .btn.primary{background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;}
+  .btn.ghost{background:var(--bg);color:var(--text-sub);}
+  .btn.danger{background:#fff0f0;color:var(--red);}
+
+  .oshi-list-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .oshi-list-item:last-child{border-bottom:none;}
+  .oshi-swatch{width:26px;height:26px;border-radius:50%;flex-shrink:0;}
+  .oshi-list-item .nm{flex:1;font-size:14px;font-weight:600;}
+  .oshi-list-item .grp{font-size:11px;color:var(--text-sub);}
+  .small-btn{background:var(--bg);border:none;color:var(--text-sub);width:28px;height:28px;border-radius:8px;font-size:13px;}
+
+  .exp-bar-row{margin-bottom:10px;}
+  .exp-bar-row .top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+  .exp-bar-bg{background:var(--bg);border-radius:8px;height:10px;overflow:hidden;}
+  .exp-bar-fill{height:100%;border-radius:8px;}
+
+  select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%238a7a82'/></svg>");background-repeat:no-repeat;background-position:right 12px center;}
+
+  .toolbar-actions{display:flex;gap:8px;margin-bottom:10px;}
+  .toolbar-actions .small-btn{width:auto;padding:0 10px;height:30px;font-size:11px;}
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <div>
+    <h1>💗 推し活ノート</h1>
+    <div class="sub" id="headerSub">今日も推しに元気をもらおう</div>
+  </div>
+  <button class="icon-btn" onclick="openDataSheet()">⚙</button>
+</header>
+
+<main>
+
+  <!-- ホーム -->
+  <section class="view active" id="view-home">
+    <div class="stat-row">
+      <div class="stat">
+        <div class="num" id="statUpcoming">0</div>
+        <div class="lbl">直近の予定</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="statWaiting">0</div>
+        <div class="lbl">結果待ち</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="statMonthYen">¥0</div>
+        <div class="lbl">今月の推し活費</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📅 直近の予定・抽選 <span class="cnt">7日以内</span></h2>
+      <div id="homeUpcomingList"><div class="empty">予定はまだありません</div></div>
+    </div>
+
+    <div class="card">
+      <h2>🎟 結果待ちの抽選</h2>
+      <div id="homeWaitingList"><div class="empty">結果待ちの抽選はありません</div></div>
+    </div>
+
+    <div class="card">
+      <h2>💸 今月の推し別支出</h2>
+      <div id="homeExpenseBreakdown"><div class="empty">支出の記録はまだありません</div></div>
+    </div>
+  </section>
+
+  <!-- カレンダー -->
+  <section class="view" id="view-calendar">
+    <div class="card">
+      <div class="cal-head">
+        <button onclick="calShiftMonth(-1)">‹</button>
+        <div class="ym" id="calYm">2026年9月</div>
+        <button onclick="calShiftMonth(1)">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+    <div class="card">
+      <h2 id="calSelDateLabel">選択日の予定</h2>
+      <div id="calDayList"><div class="empty">日付をタップして予定を見る</div></div>
+    </div>
+  </section>
+
+  <!-- 予定・抽選 -->
+  <section class="view" id="view-items">
+    <div class="chip-row" id="itemOshiFilter"></div>
+    <div class="chip-row" id="itemStatusFilter"></div>
+    <div class="card">
+      <h2>一覧 <span class="cnt" id="itemListCount"></span></h2>
+      <div id="itemsList"><div class="empty">予定・抽選がまだありません</div></div>
+    </div>
+  </section>
+
+  <!-- 収支 -->
+  <section class="view" id="view-expenses">
+    <div class="cal-head">
+      <button onclick="expShiftMonth(-1)">‹</button>
+      <div class="ym" id="expYm">2026年9月</div>
+      <button onclick="expShiftMonth(1)">›</button>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="num" id="expTotal">¥0</div><div class="lbl">今月の合計</div></div>
+      <div class="stat"><div class="num" id="expCount">0</div><div class="lbl">件数</div></div>
+    </div>
+    <div class="card">
+      <h2>推し別内訳</h2>
+      <div id="expBreakdown"><div class="empty">この月の記録はありません</div></div>
+    </div>
+    <div class="card">
+      <h2>カテゴリ別内訳</h2>
+      <div id="expCatBreakdown"><div class="empty">この月の記録はありません</div></div>
+    </div>
+    <div class="card">
+      <h2>明細</h2>
+      <div id="expList"><div class="empty">この月の記録はありません</div></div>
+    </div>
+  </section>
+
+  <!-- 推し管理 -->
+  <section class="view" id="view-oshi">
+    <div class="card">
+      <h2>推し・グループ一覧</h2>
+      <div id="oshiList"><div class="empty">まだ登録されていません。右下の＋から追加してください</div></div>
+    </div>
+  </section>
+
+</main>
+
+<button class="fab" id="fabBtn" onclick="handleFabClick()">＋</button>
+
+<nav class="tabbar">
+  <button class="tab-btn active" data-view="home" onclick="switchView('home')"><span class="ic">🏠</span>ホーム</button>
+  <button class="tab-btn" data-view="calendar" onclick="switchView('calendar')"><span class="ic">📅</span>カレンダー</button>
+  <button class="tab-btn" data-view="items" onclick="switchView('items')"><span class="ic">🎟</span>予定・抽選</button>
+  <button class="tab-btn" data-view="expenses" onclick="switchView('expenses')"><span class="ic">💸</span>収支</button>
+  <button class="tab-btn" data-view="oshi" onclick="switchView('oshi')"><span class="ic">⭐</span>推し管理</button>
+</nav>
+
+<!-- item edit sheet -->
+<div class="overlay hidden" id="itemSheet">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h3 id="itemSheetTitle">予定・抽選を追加</h3>
+      <button onclick="closeSheet('itemSheet')">✕</button>
+    </div>
+    <div class="field">
+      <label>推し・グループ</label>
+      <select id="f_oshiId"></select>
+    </div>
+    <div class="field">
+      <label>タイトル</label>
+      <input type="text" id="f_title" placeholder="例：〇〇単独ライブ / 配信イベント抽選">
+    </div>
+    <div class="field">
+      <label>種類</label>
+      <div class="seg" id="f_type">
+        <button type="button" data-v="ライブ">ライブ</button>
+        <button type="button" data-v="イベント">イベント</button>
+        <button type="button" data-v="配信">配信</button>
+        <button type="button" data-v="抽選">抽選</button>
+        <button type="button" data-v="物販">物販</button>
+        <button type="button" data-v="その他">その他</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>日付</label>
+      <input type="date" id="f_date">
+    </div>
+    <div class="field">
+      <label>時間（任意）</label>
+      <input type="time" id="f_time">
+    </div>
+    <div class="field">
+      <label>会場・詳細（任意）</label>
+      <input type="text" id="f_venue" placeholder="例：東京ドーム / FC先行">
+    </div>
+    <div class="field">
+      <label>ステータス</label>
+      <div class="seg" id="f_status">
+        <button type="button" data-v="未定">未定</button>
+        <button type="button" data-v="申込中">申込中</button>
+        <button type="button" data-v="当選">当選</button>
+        <button type="button" data-v="落選">落選</button>
+        <button type="button" data-v="確定">確定</button>
+        <button type="button" data-v="終了">終了</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>メモ（任意）</label>
+      <textarea id="f_memo" placeholder="座席番号、必要な持ち物など"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn danger hidden" id="itemDeleteBtn" onclick="deleteCurrentItem()">削除</button>
+      <button class="btn primary" onclick="saveItem()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- expense edit sheet -->
+<div class="overlay hidden" id="expSheet">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h3 id="expSheetTitle">支出を追加</h3>
+      <button onclick="closeSheet('expSheet')">✕</button>
+    </div>
+    <div class="field">
+      <label>推し・グループ</label>
+      <select id="e_oshiId"></select>
+    </div>
+    <div class="field">
+      <label>金額（円）</label>
+      <input type="number" id="e_amount" placeholder="5000" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>カテゴリ</label>
+      <div class="seg" id="e_category">
+        <button type="button" data-v="チケット">チケット</button>
+        <button type="button" data-v="グッズ">グッズ</button>
+        <button type="button" data-v="交通費">交通費</button>
+        <button type="button" data-v="宿泊">宿泊</button>
+        <button type="button" data-v="その他">その他</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>日付</label>
+      <input type="date" id="e_date">
+    </div>
+    <div class="field">
+      <label>メモ（任意）</label>
+      <input type="text" id="e_memo" placeholder="例：〇〇単独ライブ チケット代">
+    </div>
+    <div class="btn-row">
+      <button class="btn danger hidden" id="expDeleteBtn" onclick="deleteCurrentExpense()">削除</button>
+      <button class="btn primary" onclick="saveExpense()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- oshi edit sheet -->
+<div class="overlay hidden" id="oshiSheet">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h3 id="oshiSheetTitle">推し・グループを追加</h3>
+      <button onclick="closeSheet('oshiSheet')">✕</button>
+    </div>
+    <div class="field">
+      <label>名前</label>
+      <input type="text" id="o_name" placeholder="例：〇〇（名前 or グループ名）">
+    </div>
+    <div class="field">
+      <label>グループ名（任意）</label>
+      <input type="text" id="o_group" placeholder="例：所属グループ名">
+    </div>
+    <div class="field">
+      <label>カラー</label>
+      <div class="color-row" id="o_color"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn danger hidden" id="oshiDeleteBtn" onclick="deleteCurrentOshi()">削除</button>
+      <button class="btn primary" onclick="saveOshi()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- data / settings sheet -->
+<div class="overlay hidden" id="dataSheet">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h3>データ管理</h3>
+      <button onclick="closeSheet('dataSheet')">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-sub);line-height:1.6;">
+      データはこの端末のブラウザ内だけに保存されます。他の端末と共有したい場合は、書き出したファイルを送って読み込んでください。
+    </p>
+    <div class="btn-row">
+      <button class="btn ghost" onclick="exportData()">📤 書き出す</button>
+      <button class="btn ghost" onclick="document.getElementById('importFile').click()">📥 読み込む</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importData(event)">
+    <div class="btn-row">
+      <button class="btn danger" onclick="resetAllData()">全データを削除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- データ ---------- */
+const STORAGE_KEY = 'oshikatsuNoteData_v1';
+const DEFAULT_COLORS = ['#ff5c8a','#8a6cff','#3ecf8e','#ffb648','#4dc4ff','#ff8a5c','#c96cff','#ff4d6d'];
+
+let db = loadData();
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return { oshiList: [], items: [], expenses: [] };
+}
+function saveData(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function yen(n){ return '¥' + Number(n||0).toLocaleString('ja-JP'); }
+function todayStr(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function fmtDate(dstr){
+  if(!dstr) return '';
+  const d = new Date(dstr+'T00:00:00');
+  const w = ['日','月','火','水','木','金','土'][d.getDay()];
+  return (d.getMonth()+1)+'/'+d.getDate()+'('+w+')';
+}
+function oshiById(id){ return db.oshiList.find(o=>o.id===id); }
+function oshiColor(id){ const o = oshiById(id); return o ? o.color : '#ccc'; }
+function oshiName(id){ const o = oshiById(id); return o ? o.name : '未設定'; }
+
+/* ---------- 画面切替 ---------- */
+function switchView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+  currentView = name;
+  renderAll();
+}
+let currentView = 'home';
+
+function handleFabClick(){
+  if(currentView==='expenses'){ openExpenseSheet(); }
+  else if(currentView==='oshi'){ openOshiSheet(); }
+  else { openItemSheet(); }
+}
+
+function openDataSheet(){ document.getElementById('dataSheet').classList.remove('hidden'); }
+function closeSheet(id){ document.getElementById(id).classList.add('hidden'); }
+
+/* ---------- セグメントボタン共通 ---------- */
+function setupSeg(containerId){
+  const c = document.getElementById(containerId);
+  c.querySelectorAll('button').forEach(b=>{
+    b.onclick = ()=>{ c.querySelectorAll('button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+  });
+}
+function segValue(containerId){
+  const b = document.querySelector('#'+containerId+' button.active');
+  return b ? b.dataset.v : null;
+}
+function segSet(containerId, val){
+  const c = document.getElementById(containerId);
+  c.querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.v===val));
+}
+setupSeg('f_type'); setupSeg('f_status'); setupSeg('e_category');
+
+/* ---------- 推し select 反映 ---------- */
+function refreshOshiSelects(){
+  const opts = db.oshiList.map(o=>`<option value="${o.id}">${escapeHtml(o.name)}</option>`).join('');
+  document.getElementById('f_oshiId').innerHTML = opts || '<option value="">先に推しを登録してください</option>';
+  document.getElementById('e_oshiId').innerHTML = opts || '<option value="">先に推しを登録してください</option>';
+}
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ---------- 予定・抽選 CRUD ---------- */
+let editingItemId = null;
+function openItemSheet(prefillDate){
+  if(db.oshiList.length===0){ alert('先に「推し管理」から推し・グループを登録してください'); switchView('oshi'); openOshiSheet(); return; }
+  editingItemId = null;
+  refreshOshiSelects();
+  document.getElementById('itemSheetTitle').textContent = '予定・抽選を追加';
+  document.getElementById('itemDeleteBtn').classList.add('hidden');
+  document.getElementById('f_title').value = '';
+  document.getElementById('f_date').value = prefillDate || todayStr();
+  document.getElementById('f_time').value = '';
+  document.getElementById('f_venue').value = '';
+  document.getElementById('f_memo').value = '';
+  segSet('f_type','イベント');
+  segSet('f_status','未定');
+  document.getElementById('itemSheet').classList.remove('hidden');
+}
+function editItem(id){
+  const it = db.items.find(x=>x.id===id);
+  if(!it) return;
+  editingItemId = id;
+  refreshOshiSelects();
+  document.getElementById('itemSheetTitle').textContent = '予定・抽選を編集';
+  document.getElementById('itemDeleteBtn').classList.remove('hidden');
+  document.getElementById('f_oshiId').value = it.oshiId;
+  document.getElementById('f_title').value = it.title;
+  document.getElementById('f_date').value = it.date;
+  document.getElementById('f_time').value = it.time || '';
+  document.getElementById('f_venue').value = it.venue || '';
+  document.getElementById('f_memo').value = it.memo || '';
+  segSet('f_type', it.type);
+  segSet('f_status', it.status);
+  document.getElementById('itemSheet').classList.remove('hidden');
+}
+function saveItem(){
+  const title = document.getElementById('f_title').value.trim();
+  const date = document.getElementById('f_date').value;
+  if(!title){ alert('タイトルを入力してください'); return; }
+  if(!date){ alert('日付を選択してください'); return; }
+  const obj = {
+    oshiId: document.getElementById('f_oshiId').value,
+    title, date,
+    time: document.getElementById('f_time').value,
+    venue: document.getElementById('f_venue').value.trim(),
+    memo: document.getElementById('f_memo').value.trim(),
+    type: segValue('f_type') || 'その他',
+    status: segValue('f_status') || '未定',
+  };
+  if(editingItemId){
+    Object.assign(db.items.find(x=>x.id===editingItemId), obj);
+  }else{
+    obj.id = uid();
+    db.items.push(obj);
+  }
+  saveData();
+  closeSheet('itemSheet');
+  renderAll();
+}
+function deleteCurrentItem(){
+  if(!editingItemId) return;
+  if(!confirm('削除しますか？')) return;
+  db.items = db.items.filter(x=>x.id!==editingItemId);
+  saveData();
+  closeSheet('itemSheet');
+  renderAll();
+}
+function quickStatus(id, status, ev){
+  if(ev) ev.stopPropagation();
+  const it = db.items.find(x=>x.id===id);
+  if(!it) return;
+  it.status = status;
+  saveData();
+  renderAll();
+}
+
+/* ---------- 支出 CRUD ---------- */
+let editingExpId = null;
+function openExpenseSheet(prefillDate){
+  if(db.oshiList.length===0){ alert('先に「推し管理」から推し・グループを登録してください'); switchView('oshi'); openOshiSheet(); return; }
+  editingExpId = null;
+  refreshOshiSelects();
+  document.getElementById('expSheetTitle').textContent = '支出を追加';
+  document.getElementById('expDeleteBtn').classList.add('hidden');
+  document.getElementById('e_amount').value = '';
+  document.getElementById('e_date').value = prefillDate || todayStr();
+  document.getElementById('e_memo').value = '';
+  segSet('e_category','グッズ');
+  document.getElementById('expSheet').classList.remove('hidden');
+}
+function editExpense(id){
+  const ex = db.expenses.find(x=>x.id===id);
+  if(!ex) return;
+  editingExpId = id;
+  refreshOshiSelects();
+  document.getElementById('expSheetTitle').textContent = '支出を編集';
+  document.getElementById('expDeleteBtn').classList.remove('hidden');
+  document.getElementById('e_oshiId').value = ex.oshiId;
+  document.getElementById('e_amount').value = ex.amount;
+  document.getElementById('e_date').value = ex.date;
+  document.getElementById('e_memo').value = ex.memo || '';
+  segSet('e_category', ex.category);
+  document.getElementById('expSheet').classList.remove('hidden');
+}
+function saveExpense(){
+  const amount = Number(document.getElementById('e_amount').value);
+  const date = document.getElementById('e_date').value;
+  if(!amount || amount<=0){ alert('金額を入力してください'); return; }
+  if(!date){ alert('日付を選択してください'); return; }
+  const obj = {
+    oshiId: document.getElementById('e_oshiId').value,
+    amount, date,
+    memo: document.getElementById('e_memo').value.trim(),
+    category: segValue('e_category') || 'その他',
+  };
+  if(editingExpId){
+    Object.assign(db.expenses.find(x=>x.id===editingExpId), obj);
+  }else{
+    obj.id = uid();
+    db.expenses.push(obj);
+  }
+  saveData();
+  closeSheet('expSheet');
+  renderAll();
+}
+function deleteCurrentExpense(){
+  if(!editingExpId) return;
+  if(!confirm('削除しますか？')) return;
+  db.expenses = db.expenses.filter(x=>x.id!==editingExpId);
+  saveData();
+  closeSheet('expSheet');
+  renderAll();
+}
+
+/* ---------- 推し CRUD ---------- */
+let editingOshiId = null;
+let pickedColor = DEFAULT_COLORS[0];
+function buildColorPicker(){
+  const c = document.getElementById('o_color');
+  c.innerHTML = DEFAULT_COLORS.map(col=>`<div class="color-swatch" data-c="${col}" style="background:${col}"></div>`).join('');
+  c.querySelectorAll('.color-swatch').forEach(sw=>{
+    sw.onclick = ()=>{ pickedColor = sw.dataset.c; c.querySelectorAll('.color-swatch').forEach(x=>x.classList.remove('active')); sw.classList.add('active'); };
+  });
+}
+buildColorPicker();
+function openOshiSheet(){
+  editingOshiId = null;
+  document.getElementById('oshiSheetTitle').textContent = '推し・グループを追加';
+  document.getElementById('oshiDeleteBtn').classList.add('hidden');
+  document.getElementById('o_name').value = '';
+  document.getElementById('o_group').value = '';
+  pickedColor = DEFAULT_COLORS[db.oshiList.length % DEFAULT_COLORS.length];
+  document.querySelectorAll('#o_color .color-swatch').forEach(x=>x.classList.toggle('active', x.dataset.c===pickedColor));
+  document.getElementById('oshiSheet').classList.remove('hidden');
+}
+function editOshi(id){
+  const o = db.oshiList.find(x=>x.id===id);
+  if(!o) return;
+  editingOshiId = id;
+  document.getElementById('oshiSheetTitle').textContent = '推し・グループを編集';
+  document.getElementById('oshiDeleteBtn').classList.remove('hidden');
+  document.getElementById('o_name').value = o.name;
+  document.getElementById('o_group').value = o.group || '';
+  pickedColor = o.color;
+  document.querySelectorAll('#o_color .color-swatch').forEach(x=>x.classList.toggle('active', x.dataset.c===pickedColor));
+  document.getElementById('oshiSheet').classList.remove('hidden');
+}
+function saveOshi(){
+  const name = document.getElementById('o_name').value.trim();
+  if(!name){ alert('名前を入力してください'); return; }
+  const obj = { name, group: document.getElementById('o_group').value.trim(), color: pickedColor };
+  if(editingOshiId){
+    Object.assign(db.oshiList.find(x=>x.id===editingOshiId), obj);
+  }else{
+    obj.id = uid();
+    db.oshiList.push(obj);
+  }
+  saveData();
+  closeSheet('oshiSheet');
+  renderAll();
+}
+function deleteCurrentOshi(){
+  if(!editingOshiId) return;
+  const usedInItems = db.items.some(x=>x.oshiId===editingOshiId);
+  const usedInExp = db.expenses.some(x=>x.oshiId===editingOshiId);
+  let msg = '削除しますか？';
+  if(usedInItems || usedInExp) msg = 'この推しに紐づく予定・支出も表示上「未設定」になります。削除しますか？';
+  if(!confirm(msg)) return;
+  db.oshiList = db.oshiList.filter(x=>x.id!==editingOshiId);
+  saveData();
+  closeSheet('oshiSheet');
+  renderAll();
+}
+
+/* ---------- データ書き出し／読み込み ---------- */
+function exportData(){
+  const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date();
+  const stamp = d.toISOString().slice(0,10);
+  a.href = url;
+  a.download = `oshikatsu-note-backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+function importData(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(!parsed.oshiList || !parsed.items || !parsed.expenses) throw new Error('形式が違います');
+      if(!confirm('現在のデータを上書きして読み込みますか？')) return;
+      db = { oshiList: parsed.oshiList, items: parsed.items, expenses: parsed.expenses };
+      saveData();
+      closeSheet('dataSheet');
+      renderAll();
+      alert('読み込みました');
+    }catch(err){
+      alert('読み込みに失敗しました：ファイル形式を確認してください');
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
+}
+function resetAllData(){
+  if(!confirm('本当にすべてのデータを削除しますか？この操作は取り消せません')) return;
+  if(!confirm('最終確認：全ての推し・予定・支出データを削除します。よろしいですか？')) return;
+  db = { oshiList: [], items: [], expenses: [] };
+  saveData();
+  closeSheet('dataSheet');
+  renderAll();
+}
+
+/* ---------- レンダリング：ホーム ---------- */
+function renderHome(){
+  const today = todayStr();
+  const in7 = new Date(); in7.setDate(in7.getDate()+7);
+  const in7str = in7.toISOString().slice(0,10);
+
+  const upcoming = db.items
+    .filter(x=>x.date>=today && x.date<=in7str && x.status!=='終了')
+    .sort((a,b)=> a.date.localeCompare(b.date));
+  document.getElementById('statUpcoming').textContent = upcoming.length;
+  document.getElementById('homeUpcomingList').innerHTML = upcoming.length ? upcoming.map(renderItemRow).join('') :
+    '<div class="empty">7日以内の予定はありません</div>';
+
+  const waiting = db.items.filter(x=>x.status==='申込中').sort((a,b)=>a.date.localeCompare(b.date));
+  document.getElementById('statWaiting').textContent = waiting.length;
+  document.getElementById('homeWaitingList').innerHTML = waiting.length ? waiting.map(renderItemRow).join('') :
+    '<div class="empty">結果待ちの抽選はありません</div>';
+
+  const ym = today.slice(0,7);
+  const monthExp = db.expenses.filter(x=>x.date.slice(0,7)===ym);
+  const monthTotal = monthExp.reduce((s,x)=>s+Number(x.amount),0);
+  document.getElementById('statMonthYen').textContent = yen(monthTotal);
+  document.getElementById('homeExpenseBreakdown').innerHTML = renderOshiBreakdown(monthExp, monthTotal);
+}
+function renderItemRow(it){
+  return `<div class="item-row" onclick="editItem('${it.id}')">
+    <div class="item-date">${fmtDate(it.date)}${it.time? '<br>'+it.time:''}</div>
+    <span class="oshi-dot" style="background:${oshiColor(it.oshiId)}"></span>
+    <div class="item-main">
+      <div class="item-title">${escapeHtml(it.title)}</div>
+      <div class="item-meta">${escapeHtml(oshiName(it.oshiId))} ・ ${it.type}${it.venue? ' ・ '+escapeHtml(it.venue):''}</div>
+    </div>
+    <span class="badge status-${it.status}">${it.status}</span>
+  </div>`;
+}
+function renderOshiBreakdown(list, total){
+  if(!list.length) return '<div class="empty">この期間の記録はありません</div>';
+  const byOshi = {};
+  list.forEach(x=>{ byOshi[x.oshiId] = (byOshi[x.oshiId]||0) + Number(x.amount); });
+  const rows = Object.entries(byOshi).sort((a,b)=>b[1]-a[1]);
+  return rows.map(([oid, amt])=>{
+    const pct = total>0 ? Math.round(amt/total*100) : 0;
+    return `<div class="exp-bar-row">
+      <div class="top"><span>${escapeHtml(oshiName(oid))}</span><span>${yen(amt)}（${pct}%）</span></div>
+      <div class="exp-bar-bg"><div class="exp-bar-fill" style="width:${pct}%;background:${oshiColor(oid)}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- レンダリング：カレンダー ---------- */
+let calDate = new Date();
+function calShiftMonth(diff){ calDate.setMonth(calDate.getMonth()+diff); calSelectedDate=null; renderCalendar(); }
+let calSelectedDate = null;
+function renderCalendar(){
+  const y = calDate.getFullYear(), m = calDate.getMonth();
+  document.getElementById('calYm').textContent = `${y}年${m+1}月`;
+  const first = new Date(y,m,1);
+  const startDow = first.getDay();
+  const daysInMonth = new Date(y,m+1,0).getDate();
+  const todayS = todayStr();
+
+  const itemsByDate = {};
+  db.items.forEach(it=>{ (itemsByDate[it.date] = itemsByDate[it.date]||[]).push(it); });
+
+  let html = ['日','月','火','水','木','金','土'].map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<startDow;i++) html += '<div class="cal-cell blank"></div>';
+  for(let d=1; d<=daysInMonth; d++){
+    const dstr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayItems = itemsByDate[dstr] || [];
+    const dots = dayItems.slice(0,4).map(it=>`<span style="background:${oshiColor(it.oshiId)}"></span>`).join('');
+    const cls = ['cal-cell'];
+    if(dstr===todayS) cls.push('today');
+    if(dstr===calSelectedDate) cls.push('selected');
+    html += `<div class="${cls.join(' ')}" onclick="selectCalDate('${dstr}')">${d}<div class="cal-dots">${dots}</div></div>`;
+  }
+  document.getElementById('calGrid').innerHTML = html;
+
+  if(calSelectedDate){
+    document.getElementById('calSelDateLabel').textContent = fmtDate(calSelectedDate) + 'の予定';
+    const list = (itemsByDate[calSelectedDate]||[]).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    document.getElementById('calDayList').innerHTML = list.length ? list.map(renderItemRow).join('') :
+      `<div class="empty">この日の予定はありません</div><div class="btn-row"><button class="btn ghost" onclick="openItemSheet('${calSelectedDate}')" style="flex:none;padding:8px 16px;">＋ この日に追加</button></div>`;
+  }else{
+    document.getElementById('calSelDateLabel').textContent = '選択日の予定';
+    document.getElementById('calDayList').innerHTML = '<div class="empty">日付をタップして予定を見る</div>';
+  }
+}
+function selectCalDate(dstr){
+  calSelectedDate = (calSelectedDate===dstr) ? null : dstr;
+  renderCalendar();
+}
+
+/* ---------- レンダリング：予定・抽選一覧 ---------- */
+let itemFilterOshi = 'all';
+let itemFilterStatus = 'all';
+function renderItemFilters(){
+  const oshiChips = ['<button class="chip '+(itemFilterOshi==='all'?'active':'')+'" onclick="setItemFilterOshi(\'all\')">すべての推し</button>']
+    .concat(db.oshiList.map(o=>`<button class="chip ${itemFilterOshi===o.id?'active':''}" onclick="setItemFilterOshi('${o.id}')">${escapeHtml(o.name)}</button>`));
+  document.getElementById('itemOshiFilter').innerHTML = oshiChips.join('');
+
+  const statuses = ['all','未定','申込中','当選','落選','確定','終了'];
+  const statusChips = statuses.map(s=>`<button class="chip ${itemFilterStatus===s?'active':''}" onclick="setItemFilterStatus('${s}')">${s==='all'?'すべて':s}</button>`);
+  document.getElementById('itemStatusFilter').innerHTML = statusChips.join('');
+}
+function setItemFilterOshi(v){ itemFilterOshi = v; renderItems(); }
+function setItemFilterStatus(v){ itemFilterStatus = v; renderItems(); }
+function renderItems(){
+  renderItemFilters();
+  let list = db.items.slice().sort((a,b)=> b.date.localeCompare(a.date));
+  if(itemFilterOshi!=='all') list = list.filter(x=>x.oshiId===itemFilterOshi);
+  if(itemFilterStatus!=='all') list = list.filter(x=>x.status===itemFilterStatus);
+  document.getElementById('itemListCount').textContent = list.length ? list.length+'件' : '';
+  document.getElementById('itemsList').innerHTML = list.length ? list.map(renderItemRow).join('') :
+    '<div class="empty">条件に合う予定・抽選はありません</div>';
+}
+
+/* ---------- レンダリング：収支 ---------- */
+let expDate = new Date();
+function expShiftMonth(diff){ expDate.setMonth(expDate.getMonth()+diff); renderExpenses(); }
+function renderExpenses(){
+  const y = expDate.getFullYear(), m = expDate.getMonth();
+  document.getElementById('expYm').textContent = `${y}年${m+1}月`;
+  const ym = `${y}-${String(m+1).padStart(2,'0')}`;
+  const list = db.expenses.filter(x=>x.date.slice(0,7)===ym).sort((a,b)=>b.date.localeCompare(a.date));
+  const total = list.reduce((s,x)=>s+Number(x.amount),0);
+  document.getElementById('expTotal').textContent = yen(total);
+  document.getElementById('expCount').textContent = list.length;
+  document.getElementById('expBreakdown').innerHTML = renderOshiBreakdown(list, total);
+
+  const byCat = {};
+  list.forEach(x=>{ byCat[x.category] = (byCat[x.category]||0)+Number(x.amount); });
+  const catColors = {'チケット':'#ff5c8a','グッズ':'#8a6cff','交通費':'#3ecf8e','宿泊':'#ffb648','その他':'#c9bfc4'};
+  const catRows = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>{
+    const pct = total>0 ? Math.round(amt/total*100) : 0;
+    return `<div class="exp-bar-row">
+      <div class="top"><span>${cat}</span><span>${yen(amt)}（${pct}%）</span></div>
+      <div class="exp-bar-bg"><div class="exp-bar-fill" style="width:${pct}%;background:${catColors[cat]||'#ccc'}"></div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('expCatBreakdown').innerHTML = catRows || '<div class="empty">この月の記録はありません</div>';
+
+  document.getElementById('expList').innerHTML = list.length ? list.map(ex=>`
+    <div class="item-row" onclick="editExpense('${ex.id}')">
+      <div class="item-date">${fmtDate(ex.date)}</div>
+      <span class="oshi-dot" style="background:${oshiColor(ex.oshiId)}"></span>
+      <div class="item-main">
+        <div class="item-title">${escapeHtml(ex.memo || ex.category)}</div>
+        <div class="item-meta">${escapeHtml(oshiName(ex.oshiId))} ・ ${ex.category}</div>
+      </div>
+      <span class="badge status-確定">${yen(ex.amount)}</span>
+    </div>
+  `).join('') : '<div class="empty">この月の記録はありません</div>';
+}
+
+/* ---------- レンダリング：推し管理 ---------- */
+function renderOshi(){
+  document.getElementById('oshiList').innerHTML = db.oshiList.length ? db.oshiList.map(o=>`
+    <div class="oshi-list-item" onclick="editOshi('${o.id}')">
+      <div class="oshi-swatch" style="background:${o.color}"></div>
+      <div>
+        <div class="nm">${escapeHtml(o.name)}</div>
+        ${o.group ? `<div class="grp">${escapeHtml(o.group)}</div>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty">まだ登録されていません。右下の＋から追加してください</div>';
+}
+
+/* ---------- 全体レンダリング ---------- */
+function renderAll(){
+  refreshOshiSelects();
+  if(currentView==='home') renderHome();
+  else if(currentView==='calendar') renderCalendar();
+  else if(currentView==='items') renderItems();
+  else if(currentView==='expenses') renderExpenses();
+  else if(currentView==='oshi') renderOshi();
+}
+
+/* ---------- 初期化 ---------- */
+(function init(){
+  const greetings = ['今日も推しに元気をもらおう','推しは今日も尊い','推し活、ほどほどに楽しんで'];
+  document.getElementById('headerSub').textContent = greetings[Math.floor(Math.random()*greetings.length)];
+  renderAll();
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+    });
+  }
+})();
+</script>
+</body>
+</html>
