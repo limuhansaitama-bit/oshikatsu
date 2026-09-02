@@ -1030,7 +1030,10 @@ function mergeImportData(ev){
         const nm = String(o.name||'').trim();
         if(!nm) return;
         const existing = db.oshiList.find(x=>x.name.trim()===nm);
-        if(existing){ oshiIdMap[o.id] = existing.id; }
+        if(existing){
+          oshiIdMap[o.id] = existing.id;
+          if(!existing.group && o.group) existing.group = o.group;
+        }
         else{
           const newId = uid();
           db.oshiList.push({ id:newId, name:nm, group:o.group||'', color:o.color||DEFAULT_COLORS[db.oshiList.length % DEFAULT_COLORS.length] });
@@ -1256,10 +1259,26 @@ function renderItemFilters(){
 }
 function setItemFilterOshi(v){ itemFilterOshi = v; renderItems(); }
 function setItemFilterStatus(v){ itemFilterStatus = v; renderItems(); }
+function itemMatchesOshiFilter(it, oshiId){
+  if(oshiId==='all') return true;
+  if(it.oshiId===oshiId) return true;
+  const filterOshi = oshiById(oshiId);
+  if(!filterOshi) return false;
+  // グループ扱いの予定でも、出演メンバー欄にその推しの名前があれば一致とみなす
+  if(filterOshi.name && it.performers && it.performers.includes(filterOshi.name)) return true;
+  // その推しの所属グループ名の予定で、出演メンバー欄が「全メンバー」等または空欄なら、
+  // グループ全体の予定とみなしてその推しにも表示する
+  const itemOshi = oshiById(it.oshiId);
+  if(itemOshi && filterOshi.group && filterOshi.group.trim() && filterOshi.group.trim()===itemOshi.name.trim()){
+    const allMembersMarkers = ['全メンバー','全員'];
+    if(!it.performers || allMembersMarkers.some(m=>it.performers.includes(m))) return true;
+  }
+  return false;
+}
 function renderItems(){
   renderItemFilters();
   let list = db.items.slice().sort((a,b)=> b.date.localeCompare(a.date));
-  if(itemFilterOshi!=='all') list = list.filter(x=>x.oshiId===itemFilterOshi);
+  if(itemFilterOshi!=='all') list = list.filter(x=>itemMatchesOshiFilter(x, itemFilterOshi));
   if(itemFilterStatus!=='all') list = list.filter(x=>x.status===itemFilterStatus);
   document.getElementById('itemListCount').textContent = list.length ? list.length+'件' : '';
   document.getElementById('itemsList').innerHTML = list.length ? list.map(renderItemRow).join('') :
