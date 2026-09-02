@@ -1009,13 +1009,23 @@ function mergeImportData(ev){
       });
 
       const fallbackOshiId = db.oshiList[0] ? db.oshiList[0].id : '';
-      let added = 0, skipped = 0;
+      let added = 0, skipped = 0, updated = 0;
+      // 既存項目で空欄のフィールドだけ埋める（ユーザーが入力済みの内容は上書きしない）
+      const BACKFILL_FIELDS = ['venue','time','memo','applyStart','applyEnd'];
       impItems.forEach(it=>{
         const newOshiId = oshiIdMap[it.oshiId] || fallbackOshiId;
         const title = String(it.title||'').trim();
         const date = it.date || '';
         const dupe = db.items.find(x=> x.title.trim()===title && x.date===date && x.oshiId===newOshiId);
-        if(dupe || !title || !date){ skipped++; return; }
+        if(!title || !date){ skipped++; return; }
+        if(dupe){
+          let changed = false;
+          BACKFILL_FIELDS.forEach(f=>{
+            if(!dupe[f] && it[f]){ dupe[f] = it[f]; changed = true; }
+          });
+          if(changed){ updated++; } else { skipped++; }
+          return;
+        }
         const newAccountEntries = (it.accountEntries||[])
           .map(ae=>({ accountId: acctIdMap[ae.accountId] || '', status: ae.status||'申込中' }))
           .filter(ae=>ae.accountId);
@@ -1038,7 +1048,10 @@ function mergeImportData(ev){
       saveData();
       closeSheet('dataSheet');
       renderAll();
-      alert(`追加インポート完了：${added}件追加しました${skipped ? `（${skipped}件は重複または情報不足のためスキップ）` : ''}`);
+      const parts = [`${added}件追加`];
+      if(updated) parts.push(`${updated}件は空欄だった項目を補完`);
+      if(skipped) parts.push(`${skipped}件は変更なし・情報不足でスキップ`);
+      alert(`追加インポート完了：${parts.join(' / ')}`);
     }catch(err){
       alert('読み込みに失敗しました：ファイル形式を確認してください');
     }
