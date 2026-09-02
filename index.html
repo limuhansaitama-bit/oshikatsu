@@ -246,7 +246,7 @@
     </div>
 
     <div class="card">
-      <h2>⏰ 応募締切が近いもの <span class="cnt">7日以内</span></h2>
+      <h2>🛒⏰ 予約・応募締切が近いもの <span class="cnt">7日以内</span></h2>
       <div id="homeDeadlineList"><div class="empty">締切が近い応募はありません</div></div>
     </div>
 
@@ -371,6 +371,14 @@
     <div class="field">
       <label>出演メンバー（任意）</label>
       <input type="text" id="f_performers" placeholder="例：桜木雅哉、長野凌大　※グループ全体の予定でも参加者を記録できます">
+    </div>
+    <div class="field">
+      <label>予約・購入期間（任意）<span style="color:var(--text-sub);font-weight:400;">※先に商品予約やシリアル取得が必要な抽選の場合</span></label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="date" id="f_reserveStart" style="flex:1;">
+        <span style="color:var(--text-sub);font-size:12px;">〜</span>
+        <input type="date" id="f_reserveEnd" style="flex:1;">
+      </div>
     </div>
     <div class="field">
       <label>応募期間（任意）</label>
@@ -591,6 +599,27 @@ function fmtShortDate(dstr){
   return (d.getMonth()+1)+'/'+d.getDate();
 }
 function daysBetween(a,b){ return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00'))/86400000); }
+/* 予約・購入期間の状態を返す。表示不要なら null */
+function reserveInfo(it){
+  if(it.status!=='未定' && it.status!=='申込中') return null;
+  if(!it.reserveEnd) return null;
+  const today = todayStr();
+  if(it.reserveStart && today < it.reserveStart){
+    return { text:`予約受付は${fmtShortDate(it.reserveStart)}から`, color:'var(--text-sub)', bold:false, daysLeft:null };
+  }
+  const diff = daysBetween(today, it.reserveEnd);
+  if(diff < 0){
+    return { text:'予約受付は終了しています', color:'var(--text-sub)', bold:false, daysLeft:diff };
+  }else if(diff===0){
+    return { text:'本日が予約締切', color:'var(--red)', bold:true, daysLeft:0 };
+  }else if(diff<=3){
+    return { text:`予約締切まであと${diff}日`, color:'var(--red)', bold:true, daysLeft:diff };
+  }else if(diff<=7){
+    return { text:`予約締切まであと${diff}日`, color:'#a97b1f', bold:true, daysLeft:diff };
+  }else{
+    return { text:`予約締切：${fmtShortDate(it.reserveEnd)}`, color:'var(--text-sub)', bold:false, daysLeft:diff };
+  }
+}
 /* 応募期間の状態を返す。表示不要なら null */
 function deadlineInfo(it){
   if(it.status!=='未定' && it.status!=='申込中') return null;
@@ -691,6 +720,8 @@ function openItemSheet(prefillDate){
   document.getElementById('f_venue').value = '';
   document.getElementById('f_performers').value = '';
   document.getElementById('f_memo').value = '';
+  document.getElementById('f_reserveStart').value = '';
+  document.getElementById('f_reserveEnd').value = '';
   document.getElementById('f_applyStart').value = '';
   document.getElementById('f_applyEnd').value = '';
   document.getElementById('f_resultDate').value = '';
@@ -715,6 +746,8 @@ function editItem(id){
   document.getElementById('f_venue').value = it.venue || '';
   document.getElementById('f_performers').value = it.performers || '';
   document.getElementById('f_memo').value = it.memo || '';
+  document.getElementById('f_reserveStart').value = it.reserveStart || '';
+  document.getElementById('f_reserveEnd').value = it.reserveEnd || '';
   document.getElementById('f_applyStart').value = it.applyStart || '';
   document.getElementById('f_applyEnd').value = it.applyEnd || '';
   document.getElementById('f_resultDate').value = it.resultDate || '';
@@ -737,6 +770,8 @@ function saveItem(){
     venue: document.getElementById('f_venue').value.trim(),
     performers: document.getElementById('f_performers').value.trim(),
     memo: document.getElementById('f_memo').value.trim(),
+    reserveStart: document.getElementById('f_reserveStart').value,
+    reserveEnd: document.getElementById('f_reserveEnd').value,
     applyStart: document.getElementById('f_applyStart').value,
     applyEnd: document.getElementById('f_applyEnd').value,
     resultDate: document.getElementById('f_resultDate').value,
@@ -1057,7 +1092,7 @@ function mergeImportData(ev){
       const fallbackOshiId = db.oshiList[0] ? db.oshiList[0].id : '';
       let added = 0, skipped = 0, updated = 0;
       // 既存項目で空欄のフィールドだけ埋める（ユーザーが入力済みの内容は上書きしない）
-      const BACKFILL_FIELDS = ['venue','time','memo','applyStart','applyEnd','performers','resultDate','resultTime'];
+      const BACKFILL_FIELDS = ['venue','time','memo','reserveStart','reserveEnd','applyStart','applyEnd','performers','resultDate','resultTime'];
       impItems.forEach(it=>{
         const newOshiId = oshiIdMap[it.oshiId] || fallbackOshiId;
         const title = String(it.title||'').trim();
@@ -1078,6 +1113,7 @@ function mergeImportData(ev){
         db.items.push({
           id: uid(), oshiId: newOshiId, title, date,
           time: it.time||'', venue: it.venue||'', performers: it.performers||'', memo: it.memo||'',
+          reserveStart: it.reserveStart||'', reserveEnd: it.reserveEnd||'',
           applyStart: it.applyStart||'', applyEnd: it.applyEnd||'',
           resultDate: it.resultDate||'', resultTime: it.resultTime||'',
           type: it.type||'その他', status: it.status||'未定',
@@ -1133,14 +1169,20 @@ function renderHome(){
   document.getElementById('homeWaitingList').innerHTML = waiting.length ? waiting.map(renderItemRow).join('') :
     '<div class="empty">結果待ちの抽選はありません</div>';
 
+  const soonDaysLeft = x=>{
+    const rv = reserveInfo(x), dl = deadlineInfo(x);
+    const rvOk = rv && rv.daysLeft!==null && rv.daysLeft>=0 && rv.daysLeft<=7;
+    const dlOk = dl && dl.daysLeft!==null && dl.daysLeft>=0 && dl.daysLeft<=7;
+    if(rvOk && dlOk) return Math.min(rv.daysLeft, dl.daysLeft);
+    if(rvOk) return rv.daysLeft;
+    if(dlOk) return dl.daysLeft;
+    return null;
+  };
   const deadlineSoon = db.items
-    .filter(x=>{
-      const dl = deadlineInfo(x);
-      return dl && dl.daysLeft!==null && dl.daysLeft>=0 && dl.daysLeft<=7;
-    })
-    .sort((a,b)=> deadlineInfo(a).daysLeft - deadlineInfo(b).daysLeft);
+    .filter(x=> soonDaysLeft(x)!==null)
+    .sort((a,b)=> soonDaysLeft(a) - soonDaysLeft(b));
   document.getElementById('homeDeadlineList').innerHTML = deadlineSoon.length ? deadlineSoon.map(renderItemRow).join('') :
-    '<div class="empty">締切が近い応募はありません</div>';
+    '<div class="empty">予約・締切が近い応募はありません</div>';
 
   const ym = today.slice(0,7);
   const monthExp = db.expenses.filter(x=>x.date.slice(0,7)===ym);
@@ -1151,6 +1193,8 @@ function renderHome(){
 function renderItemRow(it){
   const acctCount = (it.accountEntries||[]).length;
   const acctHint = acctCount ? ` <span title="応募アカウント${acctCount}件" style="color:var(--text-sub);">・👤${acctCount}</span>` : '';
+  const rv = reserveInfo(it);
+  const rvLine = rv ? `<div class="item-meta" style="color:${rv.color};font-weight:${rv.bold?700:400};">🛒 ${rv.text}</div>` : '';
   const dl = deadlineInfo(it);
   const dlLine = dl ? `<div class="item-meta" style="color:${dl.color};font-weight:${dl.bold?700:400};">⏰ ${dl.text}</div>` : '';
   const rs = resultInfo(it);
@@ -1162,6 +1206,7 @@ function renderItemRow(it){
       <div class="item-title">${escapeHtml(it.title)}</div>
       <div class="item-meta">${escapeHtml(oshiName(it.oshiId))} ・ ${it.type}${it.venue? ' ・ '+escapeHtml(it.venue):''}${acctHint}</div>
       ${it.performers ? `<div class="item-meta">出演：${escapeHtml(it.performers)}</div>` : ''}
+      ${rvLine}
       ${dlLine}
       ${rsLine}
     </div>
@@ -1196,6 +1241,8 @@ function renderCalendar(){
 
   const itemsByDate = {};
   db.items.forEach(it=>{ (itemsByDate[it.date] = itemsByDate[it.date]||[]).push(it); });
+  const itemsByReserveEnd = {};
+  db.items.forEach(it=>{ if(it.reserveEnd && (it.status==='未定'||it.status==='申込中')) (itemsByReserveEnd[it.reserveEnd] = itemsByReserveEnd[it.reserveEnd]||[]).push(it); });
   const itemsByApplyEnd = {};
   db.items.forEach(it=>{ if(it.applyEnd && (it.status==='未定'||it.status==='申込中')) (itemsByApplyEnd[it.applyEnd] = itemsByApplyEnd[it.applyEnd]||[]).push(it); });
   const itemsByResultDate = {};
@@ -1207,9 +1254,10 @@ function renderCalendar(){
     const dstr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayItems = itemsByDate[dstr] || [];
     const dots = dayItems.slice(0,4).map(it=>`<span style="background:${oshiColor(it.oshiId)}"></span>`).join('');
+    const hasReserve = !!(itemsByReserveEnd[dstr] && itemsByReserveEnd[dstr].length);
     const hasDeadline = !!(itemsByApplyEnd[dstr] && itemsByApplyEnd[dstr].length);
     const hasResult = !!(itemsByResultDate[dstr] && itemsByResultDate[dstr].length);
-    const badges = (hasDeadline?'<span class="cal-badge dl">⏰</span>':'') + (hasResult?'<span class="cal-badge rs">🔔</span>':'');
+    const badges = (hasReserve?'<span class="cal-badge rv">🛒</span>':'') + (hasDeadline?'<span class="cal-badge dl">⏰</span>':'') + (hasResult?'<span class="cal-badge rs">🔔</span>':'');
     const cls = ['cal-cell'];
     if(dstr===todayS) cls.push('today');
     if(dstr===calSelectedDate) cls.push('selected');
@@ -1220,9 +1268,13 @@ function renderCalendar(){
   if(calSelectedDate){
     document.getElementById('calSelDateLabel').textContent = fmtDate(calSelectedDate) + 'の予定';
     const list = (itemsByDate[calSelectedDate]||[]).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    const reserveExtra = (itemsByReserveEnd[calSelectedDate]||[]).filter(it=>it.date!==calSelectedDate);
     const deadlineExtra = (itemsByApplyEnd[calSelectedDate]||[]).filter(it=>it.date!==calSelectedDate);
     const resultExtra = (itemsByResultDate[calSelectedDate]||[]).filter(it=>it.date!==calSelectedDate);
     let extraHtml = '';
+    if(reserveExtra.length){
+      extraHtml += reserveExtra.map(it=>`<div class="cal-reminder" onclick="editItem('${it.id}')">🛒 <b>本日予約締切</b>：${escapeHtml(it.title)}（${fmtShortDate(it.date)}の予定）</div>`).join('');
+    }
     if(deadlineExtra.length){
       extraHtml += deadlineExtra.map(it=>`<div class="cal-reminder" onclick="editItem('${it.id}')">⏰ <b>本日締切</b>：${escapeHtml(it.title)}（${fmtShortDate(it.date)}の予定）</div>`).join('');
     }
