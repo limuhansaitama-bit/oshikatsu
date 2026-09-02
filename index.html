@@ -240,6 +240,11 @@
     </div>
 
     <div class="card">
+      <h2>⏰ 応募締切が近いもの <span class="cnt">7日以内</span></h2>
+      <div id="homeDeadlineList"><div class="empty">締切が近い応募はありません</div></div>
+    </div>
+
+    <div class="card">
       <h2>💸 今月の推し別支出</h2>
       <div id="homeExpenseBreakdown"><div class="empty">支出の記録はまだありません</div></div>
     </div>
@@ -356,6 +361,14 @@
     <div class="field">
       <label>会場・詳細（任意）</label>
       <input type="text" id="f_venue" placeholder="例：東京ドーム / FC先行">
+    </div>
+    <div class="field">
+      <label>応募期間（任意）</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="date" id="f_applyStart" style="flex:1;">
+        <span style="color:var(--text-sub);font-size:12px;">〜</span>
+        <input type="date" id="f_applyEnd" style="flex:1;">
+      </div>
     </div>
     <div class="field">
       <label>ステータス</label>
@@ -555,6 +568,35 @@ function fmtDate(dstr){
 function oshiById(id){ return db.oshiList.find(o=>o.id===id); }
 function oshiColor(id){ const o = oshiById(id); return o ? o.color : '#ccc'; }
 function oshiName(id){ const o = oshiById(id); return o ? o.name : '未設定'; }
+function fmtShortDate(dstr){
+  if(!dstr) return '';
+  const d = new Date(dstr+'T00:00:00');
+  return (d.getMonth()+1)+'/'+d.getDate();
+}
+function daysBetween(a,b){ return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00'))/86400000); }
+/* 応募期間の状態を返す。表示不要なら null */
+function deadlineInfo(it){
+  if(it.status!=='未定' && it.status!=='申込中') return null;
+  const today = todayStr();
+  if(it.applyStart && today < it.applyStart){
+    return { text:`応募受付は${fmtShortDate(it.applyStart)}から`, color:'var(--text-sub)', bold:false, daysLeft:null };
+  }
+  if(it.applyEnd){
+    const diff = daysBetween(today, it.applyEnd);
+    if(diff < 0){
+      return { text:'応募受付は終了しています', color:'var(--text-sub)', bold:false, daysLeft:diff };
+    }else if(diff===0){
+      return { text:'本日が応募締切', color:'var(--red)', bold:true, daysLeft:0 };
+    }else if(diff<=3){
+      return { text:`応募締切まであと${diff}日`, color:'var(--red)', bold:true, daysLeft:diff };
+    }else if(diff<=7){
+      return { text:`応募締切まであと${diff}日`, color:'#a97b1f', bold:true, daysLeft:diff };
+    }else{
+      return { text:`応募締切：${fmtShortDate(it.applyEnd)}`, color:'var(--text-sub)', bold:false, daysLeft:diff };
+    }
+  }
+  return null;
+}
 
 /* ---------- 画面切替 ---------- */
 function switchView(name){
@@ -614,6 +656,8 @@ function openItemSheet(prefillDate){
   document.getElementById('f_time').value = '';
   document.getElementById('f_venue').value = '';
   document.getElementById('f_memo').value = '';
+  document.getElementById('f_applyStart').value = '';
+  document.getElementById('f_applyEnd').value = '';
   segSet('f_type','イベント');
   segSet('f_status','未定');
   currentAccountEntries = [];
@@ -633,6 +677,8 @@ function editItem(id){
   document.getElementById('f_time').value = it.time || '';
   document.getElementById('f_venue').value = it.venue || '';
   document.getElementById('f_memo').value = it.memo || '';
+  document.getElementById('f_applyStart').value = it.applyStart || '';
+  document.getElementById('f_applyEnd').value = it.applyEnd || '';
   segSet('f_type', it.type);
   segSet('f_status', it.status);
   currentAccountEntries = (it.accountEntries || []).map(e=>({...e}));
@@ -650,6 +696,8 @@ function saveItem(){
     time: document.getElementById('f_time').value,
     venue: document.getElementById('f_venue').value.trim(),
     memo: document.getElementById('f_memo').value.trim(),
+    applyStart: document.getElementById('f_applyStart').value,
+    applyEnd: document.getElementById('f_applyEnd').value,
     type: segValue('f_type') || 'その他',
     status: segValue('f_status') || '未定',
     accountEntries: currentAccountEntries.filter(e=>e.accountId),
@@ -974,6 +1022,7 @@ function mergeImportData(ev){
         db.items.push({
           id: uid(), oshiId: newOshiId, title, date,
           time: it.time||'', venue: it.venue||'', memo: it.memo||'',
+          applyStart: it.applyStart||'', applyEnd: it.applyEnd||'',
           type: it.type||'その他', status: it.status||'未定',
           accountEntries: newAccountEntries,
         });
@@ -1024,6 +1073,15 @@ function renderHome(){
   document.getElementById('homeWaitingList').innerHTML = waiting.length ? waiting.map(renderItemRow).join('') :
     '<div class="empty">結果待ちの抽選はありません</div>';
 
+  const deadlineSoon = db.items
+    .filter(x=>{
+      const dl = deadlineInfo(x);
+      return dl && dl.daysLeft!==null && dl.daysLeft>=0 && dl.daysLeft<=7;
+    })
+    .sort((a,b)=> deadlineInfo(a).daysLeft - deadlineInfo(b).daysLeft);
+  document.getElementById('homeDeadlineList').innerHTML = deadlineSoon.length ? deadlineSoon.map(renderItemRow).join('') :
+    '<div class="empty">締切が近い応募はありません</div>';
+
   const ym = today.slice(0,7);
   const monthExp = db.expenses.filter(x=>x.date.slice(0,7)===ym);
   const monthTotal = monthExp.reduce((s,x)=>s+Number(x.amount),0);
@@ -1033,12 +1091,15 @@ function renderHome(){
 function renderItemRow(it){
   const acctCount = (it.accountEntries||[]).length;
   const acctHint = acctCount ? ` <span title="応募アカウント${acctCount}件" style="color:var(--text-sub);">・👤${acctCount}</span>` : '';
+  const dl = deadlineInfo(it);
+  const dlLine = dl ? `<div class="item-meta" style="color:${dl.color};font-weight:${dl.bold?700:400};">⏰ ${dl.text}</div>` : '';
   return `<div class="item-row" onclick="editItem('${it.id}')">
     <div class="item-date">${fmtDate(it.date)}${it.time? '<br>'+it.time:''}</div>
     <span class="oshi-dot" style="background:${oshiColor(it.oshiId)}"></span>
     <div class="item-main">
       <div class="item-title">${escapeHtml(it.title)}</div>
       <div class="item-meta">${escapeHtml(oshiName(it.oshiId))} ・ ${it.type}${it.venue? ' ・ '+escapeHtml(it.venue):''}${acctHint}</div>
+      ${dlLine}
     </div>
     <span class="badge status-${it.status}">${it.status}</span>
   </div>`;
