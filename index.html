@@ -132,8 +132,8 @@
   .cal-cell.blank{background:none;}
   .cal-cell.today{border-color:var(--pink);font-weight:700;}
   .cal-cell.selected{background:var(--pink-light);border-color:var(--pink);}
-  .cal-dots{display:flex;gap:2px;margin-top:3px;flex-wrap:wrap;justify-content:center;}
-  .cal-dots span{width:5px;height:5px;border-radius:50%;}
+  .cal-dots{display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;justify-content:center;}
+  .cal-dots span{width:8px;height:8px;border-radius:50%;}
 
   /* filter chips */
   .chip-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;}
@@ -546,7 +546,7 @@
 <script>
 /* ---------- データ ---------- */
 const STORAGE_KEY = 'oshikatsuNoteData_v1';
-const DEFAULT_COLORS = ['#2f7d74','#3f6fa8','#c9622f','#8a5ba8','#b8455f','#6a9e3f','#d4a72c','#454a6b'];
+const DEFAULT_COLORS = ['#2f7d74','#3f6fa8','#c9622f','#8a5ba8','#b8455f','#6a9e3f','#d4a72c','#454a6b','#8a8f8c'];
 
 let db = loadData();
 
