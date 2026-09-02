@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#ff5c8a">
+<meta name="theme-color" content="#2f7d74">
 <title>推し活ノート</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -12,21 +12,21 @@
 <meta name="apple-mobile-web-app-title" content="推し活ノート">
 <style>
   :root{
-    --pink:#ff5c8a;
-    --pink-dark:#e0447a;
-    --pink-light:#ffe3ec;
-    --purple:#8a6cff;
-    --bg:#fff7fa;
+    --pink:#2f7d74;
+    --pink-dark:#1f5f58;
+    --pink-light:#e8f3f0;
+    --purple:#1f5f58;
+    --bg:#faf9f5;
     --card:#ffffff;
-    --text:#3a2e35;
-    --text-sub:#8a7a82;
-    --border:#f3d9e3;
+    --text:#2b3532;
+    --text-sub:#7c8b87;
+    --border:#e3ece8;
     --green:#3ecf8e;
-    --yellow:#ffb648;
-    --red:#ff6b6b;
-    --gray:#c9bfc4;
+    --yellow:#d9a441;
+    --red:#c96b5f;
+    --gray:#c9c9c4;
     --radius:16px;
-    --shadow:0 2px 12px rgba(200,80,130,0.10);
+    --shadow:0 2px 12px rgba(60,90,80,0.08);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -44,7 +44,7 @@
     padding:14px 16px calc(14px + env(safe-area-inset-top,0px));
     padding-top:calc(14px + env(safe-area-inset-top,0px));
     display:flex;align-items:center;justify-content:space-between;
-    box-shadow:0 2px 10px rgba(150,50,100,0.25);
+    box-shadow:0 2px 10px rgba(40,90,80,0.22);
   }
   header.appbar h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.5px;}
   header.appbar .sub{font-size:11px;opacity:.85;margin-top:2px;}
@@ -88,10 +88,10 @@
     font-size:10px;padding:3px 8px;border-radius:20px;font-weight:600;flex-shrink:0;white-space:nowrap;
   }
   .badge.status-未定{background:#eee;color:#888;}
-  .badge.status-申込中{background:#fff2d9;color:#c98a1d;}
-  .badge.status-当選{background:#e3f9ef;color:#1fa870;}
-  .badge.status-落選{background:#ffe6e6;color:#d64545;}
-  .badge.status-確定{background:#e6efff;color:#3a6fd8;}
+  .badge.status-申込中{background:#faf1e0;color:#a97b1f;}
+  .badge.status-当選{background:#e2f2ec;color:#1f7d64;}
+  .badge.status-落選{background:#f7e9e7;color:#b8574f;}
+  .badge.status-確定{background:#e6eef2;color:#3f6a8f;}
   .badge.status-終了{background:#f0f0f0;color:#999;}
 
   /* tabbar */
@@ -99,7 +99,7 @@
     position:fixed;bottom:0;left:0;right:0;z-index:20;
     background:#fff;border-top:1px solid var(--border);
     display:flex;padding-bottom:env(safe-area-inset-bottom,0px);
-    box-shadow:0 -2px 10px rgba(150,50,100,0.08);
+    box-shadow:0 -2px 10px rgba(40,90,80,0.08);
   }
   nav.tabbar button{
     flex:1;background:none;border:none;padding:8px 2px 6px;
@@ -113,7 +113,7 @@
     position:fixed;right:18px;bottom:88px;z-index:25;
     width:56px;height:56px;border-radius:50%;border:none;
     background:linear-gradient(135deg,var(--pink),var(--purple));
-    color:#fff;font-size:26px;box-shadow:0 4px 14px rgba(200,60,120,0.4);
+    color:#fff;font-size:26px;box-shadow:0 4px 14px rgba(40,90,80,0.35);
     display:flex;align-items:center;justify-content:center;
   }
 
@@ -162,7 +162,7 @@
 
   /* modal */
   .overlay{
-    position:fixed;inset:0;background:rgba(40,20,30,0.4);z-index:50;
+    position:fixed;inset:0;background:rgba(20,30,28,0.4);z-index:50;
     display:flex;align-items:flex-end;justify-content:center;
   }
   .overlay.hidden{display:none;}
@@ -193,7 +193,7 @@
   .exp-bar-bg{background:var(--bg);border-radius:8px;height:10px;overflow:hidden;}
   .exp-bar-fill{height:100%;border-radius:8px;}
 
-  select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%238a7a82'/></svg>");background-repeat:no-repeat;background-position:right 12px center;}
+  select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%237c8b87'/></svg>");background-repeat:no-repeat;background-position:right 12px center;}
 
   .toolbar-actions{display:flex;gap:8px;margin-bottom:10px;}
   .toolbar-actions .small-btn{width:auto;padding:0 10px;height:30px;font-size:11px;}
@@ -203,7 +203,7 @@
 
 <header class="appbar">
   <div>
-    <h1>💗 推し活ノート</h1>
+    <h1>✨ 推し活ノート</h1>
     <div class="sub" id="headerSub">今日も推しに元気をもらおう</div>
   </div>
   <button class="icon-btn" onclick="openDataSheet()">⚙</button>
@@ -262,6 +262,9 @@
 
   <!-- 予定・抽選 -->
   <section class="view" id="view-items">
+    <div class="toolbar-actions">
+      <button class="small-btn" onclick="openAccountMgmtSheet()">👤 アカウント管理</button>
+    </div>
     <div class="chip-row" id="itemOshiFilter"></div>
     <div class="chip-row" id="itemStatusFilter"></div>
     <div class="card">
@@ -365,12 +368,58 @@
       </div>
     </div>
     <div class="field">
+      <label>応募アカウント別の結果（任意）
+        <button type="button" class="small-btn" style="width:auto;padding:0 8px;height:22px;font-size:10px;margin-left:6px;vertical-align:middle;" onclick="openAccountMgmtSheet()">管理</button>
+      </label>
+      <div id="f_accountRows"></div>
+      <button type="button" class="btn ghost" style="padding:8px;font-size:12px;margin-top:2px;" onclick="addAccountEntryRow()">＋ アカウントを追加</button>
+    </div>
+    <div class="field">
       <label>メモ（任意）</label>
       <textarea id="f_memo" placeholder="座席番号、必要な持ち物など"></textarea>
     </div>
     <div class="btn-row">
       <button class="btn danger hidden" id="itemDeleteBtn" onclick="deleteCurrentItem()">削除</button>
       <button class="btn primary" onclick="saveItem()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- account management sheet (list) -->
+<div class="overlay hidden" id="accountMgmtSheet">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h3>アカウント管理</h3>
+      <button onclick="closeSheet('accountMgmtSheet')">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-sub);line-height:1.6;margin-top:-6px;">
+      複数のSNS・FCアカウントで応募する場合に、抽選結果をアカウントごとに記録できます。一覧には表示されず、予定・抽選の詳細を開いたときだけ確認できます。
+    </p>
+    <div id="accountList"><div class="empty">まだ登録されていません</div></div>
+    <div class="btn-row">
+      <button class="btn primary" onclick="openAccountEditSheet()">＋ アカウントを追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- account edit sheet -->
+<div class="overlay hidden" id="accountEditSheet">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h3 id="accountEditTitle">アカウントを追加</h3>
+      <button onclick="closeSheet('accountEditSheet')">✕</button>
+    </div>
+    <div class="field">
+      <label>アカウント名</label>
+      <input type="text" id="a_name" placeholder="例：本垢 / サブ垢1 / 家族名義">
+    </div>
+    <div class="field">
+      <label>メモ（任意）</label>
+      <input type="text" id="a_memo" placeholder="例：@xxxxで応募">
+    </div>
+    <div class="btn-row">
+      <button class="btn danger hidden" id="accountDeleteBtn" onclick="deleteCurrentAccount()">削除</button>
+      <button class="btn primary" onclick="saveAccount()">保存する</button>
     </div>
   </div>
 </div>
@@ -453,9 +502,16 @@
     </p>
     <div class="btn-row">
       <button class="btn ghost" onclick="exportData()">📤 書き出す</button>
-      <button class="btn ghost" onclick="document.getElementById('importFile').click()">📥 読み込む</button>
+      <button class="btn ghost" onclick="document.getElementById('importFile').click()">📥 読み込む（上書き）</button>
     </div>
     <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importData(event)">
+    <p style="font-size:12px;color:var(--text-sub);line-height:1.6;margin-top:14px;">
+      Claudeに調べてもらった予定など、既存のデータを消さずに追加したい場合はこちら。
+    </p>
+    <div class="btn-row">
+      <button class="btn ghost" onclick="document.getElementById('mergeImportFile').click()">➕ 追加インポート</button>
+    </div>
+    <input type="file" id="mergeImportFile" accept="application/json" style="display:none" onchange="mergeImportData(event)">
     <div class="btn-row">
       <button class="btn danger" onclick="resetAllData()">全データを削除</button>
     </div>
@@ -465,16 +521,23 @@
 <script>
 /* ---------- データ ---------- */
 const STORAGE_KEY = 'oshikatsuNoteData_v1';
-const DEFAULT_COLORS = ['#ff5c8a','#8a6cff','#3ecf8e','#ffb648','#4dc4ff','#ff8a5c','#c96cff','#ff4d6d'];
+const DEFAULT_COLORS = ['#2f7d74','#5b7c99','#a67c52','#8c6f8c','#6b8e6b','#b5654f','#4a6670','#7a8a5a'];
 
 let db = loadData();
 
 function loadData(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) return JSON.parse(raw);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      parsed.oshiList = parsed.oshiList || [];
+      parsed.items = parsed.items || [];
+      parsed.expenses = parsed.expenses || [];
+      parsed.accounts = parsed.accounts || [];
+      return parsed;
+    }
   }catch(e){}
-  return { oshiList: [], items: [], expenses: [] };
+  return { oshiList: [], items: [], expenses: [], accounts: [] };
 }
 function saveData(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
@@ -538,6 +601,7 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({"&":"&amp;
 
 /* ---------- 予定・抽選 CRUD ---------- */
 let editingItemId = null;
+let currentAccountEntries = [];
 function openItemSheet(prefillDate){
   if(db.oshiList.length===0){ alert('先に「推し管理」から推し・グループを登録してください'); switchView('oshi'); openOshiSheet(); return; }
   editingItemId = null;
@@ -551,6 +615,8 @@ function openItemSheet(prefillDate){
   document.getElementById('f_memo').value = '';
   segSet('f_type','イベント');
   segSet('f_status','未定');
+  currentAccountEntries = [];
+  renderAccountEntryRows();
   document.getElementById('itemSheet').classList.remove('hidden');
 }
 function editItem(id){
@@ -568,6 +634,8 @@ function editItem(id){
   document.getElementById('f_memo').value = it.memo || '';
   segSet('f_type', it.type);
   segSet('f_status', it.status);
+  currentAccountEntries = (it.accountEntries || []).map(e=>({...e}));
+  renderAccountEntryRows();
   document.getElementById('itemSheet').classList.remove('hidden');
 }
 function saveItem(){
@@ -583,6 +651,7 @@ function saveItem(){
     memo: document.getElementById('f_memo').value.trim(),
     type: segValue('f_type') || 'その他',
     status: segValue('f_status') || '未定',
+    accountEntries: currentAccountEntries.filter(e=>e.accountId),
   };
   if(editingItemId){
     Object.assign(db.items.find(x=>x.id===editingItemId), obj);
@@ -601,6 +670,90 @@ function deleteCurrentItem(){
   saveData();
   closeSheet('itemSheet');
   renderAll();
+}
+
+/* ---------- 応募アカウント別の結果（アイテム内） ---------- */
+function renderAccountEntryRows(){
+  const c = document.getElementById('f_accountRows');
+  if(!c) return;
+  if(!db.accounts.length){
+    c.innerHTML = '<div class="empty" style="padding:8px 0;">アカウントが未登録です。上の「管理」から追加できます</div>';
+    return;
+  }
+  if(!currentAccountEntries.length){
+    c.innerHTML = '';
+    return;
+  }
+  const statuses = ['申込中','当選','落選','確定'];
+  c.innerHTML = currentAccountEntries.map((e,idx)=>{
+    const opts = db.accounts.map(a=>`<option value="${a.id}" ${a.id===e.accountId?'selected':''}>${escapeHtml(a.name)}</option>`).join('');
+    const statusOpts = statuses.map(s=>`<option value="${s}" ${s===e.status?'selected':''}>${s}</option>`).join('');
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+      <select onchange="setAcctEntryAccount(${idx}, this.value)" style="flex:1;padding:6px 8px;font-size:12px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);">${opts}</select>
+      <select onchange="setAcctEntryStatus(${idx}, this.value)" style="width:84px;padding:6px 4px;font-size:12px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);">${statusOpts}</select>
+      <button type="button" class="small-btn" onclick="removeAcctEntryRow(${idx})">×</button>
+    </div>`;
+  }).join('');
+}
+function addAccountEntryRow(){
+  if(!db.accounts.length){ alert('先にアカウントを登録してください'); openAccountMgmtSheet(); return; }
+  currentAccountEntries.push({ accountId: db.accounts[0].id, status: '申込中' });
+  renderAccountEntryRows();
+}
+function setAcctEntryAccount(idx, val){ if(currentAccountEntries[idx]) currentAccountEntries[idx].accountId = val; }
+function setAcctEntryStatus(idx, val){ if(currentAccountEntries[idx]) currentAccountEntries[idx].status = val; }
+function removeAcctEntryRow(idx){ currentAccountEntries.splice(idx,1); renderAccountEntryRows(); }
+
+/* ---------- アカウント（応募口座）管理 CRUD ---------- */
+let editingAccountId = null;
+function openAccountMgmtSheet(){
+  renderAccountMgmtList();
+  document.getElementById('accountMgmtSheet').classList.remove('hidden');
+}
+function renderAccountMgmtList(){
+  document.getElementById('accountList').innerHTML = db.accounts.length ? db.accounts.map(a=>`
+    <div class="oshi-list-item" onclick="openAccountEditSheet('${a.id}')">
+      <div>
+        <div class="nm">${escapeHtml(a.name)}</div>
+        ${a.memo ? `<div class="grp">${escapeHtml(a.memo)}</div>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty">まだ登録されていません</div>';
+}
+function openAccountEditSheet(id){
+  editingAccountId = id || null;
+  document.getElementById('accountEditTitle').textContent = id ? 'アカウントを編集' : 'アカウントを追加';
+  document.getElementById('accountDeleteBtn').classList.toggle('hidden', !id);
+  const a = id ? db.accounts.find(x=>x.id===id) : null;
+  document.getElementById('a_name').value = a ? a.name : '';
+  document.getElementById('a_memo').value = a ? (a.memo||'') : '';
+  document.getElementById('accountEditSheet').classList.remove('hidden');
+}
+function saveAccount(){
+  const name = document.getElementById('a_name').value.trim();
+  if(!name){ alert('アカウント名を入力してください'); return; }
+  const obj = { name, memo: document.getElementById('a_memo').value.trim() };
+  if(editingAccountId){
+    Object.assign(db.accounts.find(x=>x.id===editingAccountId), obj);
+  }else{
+    obj.id = uid();
+    db.accounts.push(obj);
+  }
+  saveData();
+  closeSheet('accountEditSheet');
+  renderAccountMgmtList();
+  renderAccountEntryRows();
+}
+function deleteCurrentAccount(){
+  if(!editingAccountId) return;
+  if(!confirm('削除しますか？関連する予定の応募記録からもこのアカウントの情報が外れます')) return;
+  db.accounts = db.accounts.filter(x=>x.id!==editingAccountId);
+  db.items.forEach(it=>{ if(it.accountEntries) it.accountEntries = it.accountEntries.filter(e=>e.accountId!==editingAccountId); });
+  currentAccountEntries = currentAccountEntries.filter(e=>e.accountId!==editingAccountId);
+  saveData();
+  closeSheet('accountEditSheet');
+  renderAccountMgmtList();
+  renderAccountEntryRows();
 }
 function quickStatus(id, status, ev){
   if(ev) ev.stopPropagation();
@@ -752,7 +905,7 @@ function importData(ev){
       const parsed = JSON.parse(e.target.result);
       if(!parsed.oshiList || !parsed.items || !parsed.expenses) throw new Error('形式が違います');
       if(!confirm('現在のデータを上書きして読み込みますか？')) return;
-      db = { oshiList: parsed.oshiList, items: parsed.items, expenses: parsed.expenses };
+      db = { oshiList: parsed.oshiList, items: parsed.items, expenses: parsed.expenses, accounts: parsed.accounts || [] };
       saveData();
       closeSheet('dataSheet');
       renderAll();
@@ -764,10 +917,89 @@ function importData(ev){
   reader.readAsText(file);
   ev.target.value = '';
 }
+function mergeImportData(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(!parsed.items) throw new Error('形式が違います');
+      const impOshi = parsed.oshiList || [];
+      const impAccounts = parsed.accounts || [];
+      const impExpenses = parsed.expenses || [];
+      const impItems = parsed.items;
+
+      if(!confirm(`このファイルの内容を、今のデータを消さずに追加しますか？\n（予定 ${impItems.length}件 / 推し ${impOshi.length}件）`)) return;
+
+      // 推し・グループを名前でマッチングしてID対応表を作る（なければ新規追加）
+      const oshiIdMap = {};
+      impOshi.forEach(o=>{
+        const nm = String(o.name||'').trim();
+        if(!nm) return;
+        const existing = db.oshiList.find(x=>x.name.trim()===nm);
+        if(existing){ oshiIdMap[o.id] = existing.id; }
+        else{
+          const newId = uid();
+          db.oshiList.push({ id:newId, name:nm, group:o.group||'', color:o.color||DEFAULT_COLORS[db.oshiList.length % DEFAULT_COLORS.length] });
+          oshiIdMap[o.id] = newId;
+        }
+      });
+      // アカウントも同様に名前でマッチング
+      const acctIdMap = {};
+      impAccounts.forEach(a=>{
+        const nm = String(a.name||'').trim();
+        if(!nm) return;
+        const existing = db.accounts.find(x=>x.name.trim()===nm);
+        if(existing){ acctIdMap[a.id] = existing.id; }
+        else{
+          const newId = uid();
+          db.accounts.push({ id:newId, name:nm, memo:a.memo||'' });
+          acctIdMap[a.id] = newId;
+        }
+      });
+
+      const fallbackOshiId = db.oshiList[0] ? db.oshiList[0].id : '';
+      let added = 0, skipped = 0;
+      impItems.forEach(it=>{
+        const newOshiId = oshiIdMap[it.oshiId] || fallbackOshiId;
+        const title = String(it.title||'').trim();
+        const date = it.date || '';
+        const dupe = db.items.find(x=> x.title.trim()===title && x.date===date && x.oshiId===newOshiId);
+        if(dupe || !title || !date){ skipped++; return; }
+        const newAccountEntries = (it.accountEntries||[])
+          .map(ae=>({ accountId: acctIdMap[ae.accountId] || '', status: ae.status||'申込中' }))
+          .filter(ae=>ae.accountId);
+        db.items.push({
+          id: uid(), oshiId: newOshiId, title, date,
+          time: it.time||'', venue: it.venue||'', memo: it.memo||'',
+          type: it.type||'その他', status: it.status||'未定',
+          accountEntries: newAccountEntries,
+        });
+        added++;
+      });
+
+      impExpenses.forEach(ex=>{
+        const newOshiId = oshiIdMap[ex.oshiId] || fallbackOshiId;
+        if(!ex.date || !ex.amount) return;
+        db.expenses.push({ id: uid(), oshiId:newOshiId, amount:Number(ex.amount)||0, date:ex.date, memo:ex.memo||'', category:ex.category||'その他' });
+      });
+
+      saveData();
+      closeSheet('dataSheet');
+      renderAll();
+      alert(`追加インポート完了：${added}件追加しました${skipped ? `（${skipped}件は重複または情報不足のためスキップ）` : ''}`);
+    }catch(err){
+      alert('読み込みに失敗しました：ファイル形式を確認してください');
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
+}
 function resetAllData(){
   if(!confirm('本当にすべてのデータを削除しますか？この操作は取り消せません')) return;
   if(!confirm('最終確認：全ての推し・予定・支出データを削除します。よろしいですか？')) return;
-  db = { oshiList: [], items: [], expenses: [] };
+  db = { oshiList: [], items: [], expenses: [], accounts: [] };
   saveData();
   closeSheet('dataSheet');
   renderAll();
@@ -798,12 +1030,14 @@ function renderHome(){
   document.getElementById('homeExpenseBreakdown').innerHTML = renderOshiBreakdown(monthExp, monthTotal);
 }
 function renderItemRow(it){
+  const acctCount = (it.accountEntries||[]).length;
+  const acctHint = acctCount ? ` <span title="応募アカウント${acctCount}件" style="color:var(--text-sub);">・👤${acctCount}</span>` : '';
   return `<div class="item-row" onclick="editItem('${it.id}')">
     <div class="item-date">${fmtDate(it.date)}${it.time? '<br>'+it.time:''}</div>
     <span class="oshi-dot" style="background:${oshiColor(it.oshiId)}"></span>
     <div class="item-main">
       <div class="item-title">${escapeHtml(it.title)}</div>
-      <div class="item-meta">${escapeHtml(oshiName(it.oshiId))} ・ ${it.type}${it.venue? ' ・ '+escapeHtml(it.venue):''}</div>
+      <div class="item-meta">${escapeHtml(oshiName(it.oshiId))} ・ ${it.type}${it.venue? ' ・ '+escapeHtml(it.venue):''}${acctHint}</div>
     </div>
     <span class="badge status-${it.status}">${it.status}</span>
   </div>`;
@@ -904,7 +1138,7 @@ function renderExpenses(){
 
   const byCat = {};
   list.forEach(x=>{ byCat[x.category] = (byCat[x.category]||0)+Number(x.amount); });
-  const catColors = {'チケット':'#ff5c8a','グッズ':'#8a6cff','交通費':'#3ecf8e','宿泊':'#ffb648','その他':'#c9bfc4'};
+  const catColors = {'チケット':'#2f7d74','グッズ':'#8c6f8c','交通費':'#6b8e6b','宿泊':'#a67c52','その他':'#c9c9c4'};
   const catRows = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>{
     const pct = total>0 ? Math.round(amt/total*100) : 0;
     return `<div class="exp-bar-row">
