@@ -363,6 +363,10 @@
       <input type="text" id="f_venue" placeholder="例：東京ドーム / FC先行">
     </div>
     <div class="field">
+      <label>出演メンバー（任意）</label>
+      <input type="text" id="f_performers" placeholder="例：桜木雅哉、長野凌大　※グループ全体の予定でも参加者を記録できます">
+    </div>
+    <div class="field">
       <label>応募期間（任意）</label>
       <div style="display:flex;gap:8px;align-items:center;">
         <input type="date" id="f_applyStart" style="flex:1;">
@@ -655,6 +659,7 @@ function openItemSheet(prefillDate){
   document.getElementById('f_date').value = prefillDate || todayStr();
   document.getElementById('f_time').value = '';
   document.getElementById('f_venue').value = '';
+  document.getElementById('f_performers').value = '';
   document.getElementById('f_memo').value = '';
   document.getElementById('f_applyStart').value = '';
   document.getElementById('f_applyEnd').value = '';
@@ -676,6 +681,7 @@ function editItem(id){
   document.getElementById('f_date').value = it.date;
   document.getElementById('f_time').value = it.time || '';
   document.getElementById('f_venue').value = it.venue || '';
+  document.getElementById('f_performers').value = it.performers || '';
   document.getElementById('f_memo').value = it.memo || '';
   document.getElementById('f_applyStart').value = it.applyStart || '';
   document.getElementById('f_applyEnd').value = it.applyEnd || '';
@@ -695,6 +701,7 @@ function saveItem(){
     title, date,
     time: document.getElementById('f_time').value,
     venue: document.getElementById('f_venue').value.trim(),
+    performers: document.getElementById('f_performers').value.trim(),
     memo: document.getElementById('f_memo').value.trim(),
     applyStart: document.getElementById('f_applyStart').value,
     applyEnd: document.getElementById('f_applyEnd').value,
@@ -1011,7 +1018,7 @@ function mergeImportData(ev){
       const fallbackOshiId = db.oshiList[0] ? db.oshiList[0].id : '';
       let added = 0, skipped = 0, updated = 0;
       // 既存項目で空欄のフィールドだけ埋める（ユーザーが入力済みの内容は上書きしない）
-      const BACKFILL_FIELDS = ['venue','time','memo','applyStart','applyEnd'];
+      const BACKFILL_FIELDS = ['venue','time','memo','applyStart','applyEnd','performers'];
       impItems.forEach(it=>{
         const newOshiId = oshiIdMap[it.oshiId] || fallbackOshiId;
         const title = String(it.title||'').trim();
@@ -1031,7 +1038,7 @@ function mergeImportData(ev){
           .filter(ae=>ae.accountId);
         db.items.push({
           id: uid(), oshiId: newOshiId, title, date,
-          time: it.time||'', venue: it.venue||'', memo: it.memo||'',
+          time: it.time||'', venue: it.venue||'', performers: it.performers||'', memo: it.memo||'',
           applyStart: it.applyStart||'', applyEnd: it.applyEnd||'',
           type: it.type||'その他', status: it.status||'未定',
           accountEntries: newAccountEntries,
@@ -1112,6 +1119,7 @@ function renderItemRow(it){
     <div class="item-main">
       <div class="item-title">${escapeHtml(it.title)}</div>
       <div class="item-meta">${escapeHtml(oshiName(it.oshiId))} ・ ${it.type}${it.venue? ' ・ '+escapeHtml(it.venue):''}${acctHint}</div>
+      ${it.performers ? `<div class="item-meta">出演：${escapeHtml(it.performers)}</div>` : ''}
       ${dlLine}
     </div>
     <span class="badge status-${it.status}">${it.status}</span>
