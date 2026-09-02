@@ -375,6 +375,13 @@
       </div>
     </div>
     <div class="field">
+      <label>当落発表日（任意）</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="date" id="f_resultDate" style="flex:1;">
+        <input type="time" id="f_resultTime" style="flex:1;">
+      </div>
+    </div>
+    <div class="field">
       <label>ステータス</label>
       <div class="seg" id="f_status">
         <button type="button" data-v="未定">未定</button>
@@ -539,7 +546,7 @@
 <script>
 /* ---------- データ ---------- */
 const STORAGE_KEY = 'oshikatsuNoteData_v1';
-const DEFAULT_COLORS = ['#2f7d74','#5b7c99','#a67c52','#8c6f8c','#6b8e6b','#b5654f','#4a6670','#7a8a5a'];
+const DEFAULT_COLORS = ['#2f7d74','#3f6fa8','#c9622f','#8a5ba8','#b8455f','#6a9e3f','#d4a72c','#454a6b'];
 
 let db = loadData();
 
@@ -600,6 +607,23 @@ function deadlineInfo(it){
     }
   }
   return null;
+}
+/* 当落発表日の状態を返す。表示不要なら null（申込中で結果待ちのときだけ表示） */
+function resultInfo(it){
+  if(it.status!=='申込中') return null;
+  if(!it.resultDate) return null;
+  const today = todayStr();
+  const diff = daysBetween(today, it.resultDate);
+  const timeStr = it.resultTime ? ' '+it.resultTime : '';
+  if(diff < 0){
+    return { text:'当落発表日を過ぎています', color:'var(--text-sub)', bold:false, daysLeft:diff };
+  }else if(diff===0){
+    return { text:`本日${timeStr}ごろ当落発表`, color:'#3f6a8f', bold:true, daysLeft:0 };
+  }else if(diff<=3){
+    return { text:`当落発表まであと${diff}日（${fmtShortDate(it.resultDate)}${timeStr}）`, color:'#3f6a8f', bold:true, daysLeft:diff };
+  }else{
+    return { text:`当落発表：${fmtShortDate(it.resultDate)}${timeStr}`, color:'var(--text-sub)', bold:false, daysLeft:diff };
+  }
 }
 
 /* ---------- 画面切替 ---------- */
@@ -663,6 +687,8 @@ function openItemSheet(prefillDate){
   document.getElementById('f_memo').value = '';
   document.getElementById('f_applyStart').value = '';
   document.getElementById('f_applyEnd').value = '';
+  document.getElementById('f_resultDate').value = '';
+  document.getElementById('f_resultTime').value = '';
   segSet('f_type','イベント');
   segSet('f_status','未定');
   currentAccountEntries = [];
@@ -685,6 +711,8 @@ function editItem(id){
   document.getElementById('f_memo').value = it.memo || '';
   document.getElementById('f_applyStart').value = it.applyStart || '';
   document.getElementById('f_applyEnd').value = it.applyEnd || '';
+  document.getElementById('f_resultDate').value = it.resultDate || '';
+  document.getElementById('f_resultTime').value = it.resultTime || '';
   segSet('f_type', it.type);
   segSet('f_status', it.status);
   currentAccountEntries = (it.accountEntries || []).map(e=>({...e}));
@@ -705,6 +733,8 @@ function saveItem(){
     memo: document.getElementById('f_memo').value.trim(),
     applyStart: document.getElementById('f_applyStart').value,
     applyEnd: document.getElementById('f_applyEnd').value,
+    resultDate: document.getElementById('f_resultDate').value,
+    resultTime: document.getElementById('f_resultTime').value,
     type: segValue('f_type') || 'その他',
     status: segValue('f_status') || '未定',
     accountEntries: currentAccountEntries.filter(e=>e.accountId),
@@ -1018,7 +1048,7 @@ function mergeImportData(ev){
       const fallbackOshiId = db.oshiList[0] ? db.oshiList[0].id : '';
       let added = 0, skipped = 0, updated = 0;
       // 既存項目で空欄のフィールドだけ埋める（ユーザーが入力済みの内容は上書きしない）
-      const BACKFILL_FIELDS = ['venue','time','memo','applyStart','applyEnd','performers'];
+      const BACKFILL_FIELDS = ['venue','time','memo','applyStart','applyEnd','performers','resultDate','resultTime'];
       impItems.forEach(it=>{
         const newOshiId = oshiIdMap[it.oshiId] || fallbackOshiId;
         const title = String(it.title||'').trim();
@@ -1040,6 +1070,7 @@ function mergeImportData(ev){
           id: uid(), oshiId: newOshiId, title, date,
           time: it.time||'', venue: it.venue||'', performers: it.performers||'', memo: it.memo||'',
           applyStart: it.applyStart||'', applyEnd: it.applyEnd||'',
+          resultDate: it.resultDate||'', resultTime: it.resultTime||'',
           type: it.type||'その他', status: it.status||'未定',
           accountEntries: newAccountEntries,
         });
@@ -1113,6 +1144,8 @@ function renderItemRow(it){
   const acctHint = acctCount ? ` <span title="応募アカウント${acctCount}件" style="color:var(--text-sub);">・👤${acctCount}</span>` : '';
   const dl = deadlineInfo(it);
   const dlLine = dl ? `<div class="item-meta" style="color:${dl.color};font-weight:${dl.bold?700:400};">⏰ ${dl.text}</div>` : '';
+  const rs = resultInfo(it);
+  const rsLine = rs ? `<div class="item-meta" style="color:${rs.color};font-weight:${rs.bold?700:400};">🔔 ${rs.text}</div>` : '';
   return `<div class="item-row" onclick="editItem('${it.id}')">
     <div class="item-date">${fmtDate(it.date)}${it.time? '<br>'+it.time:''}</div>
     <span class="oshi-dot" style="background:${oshiColor(it.oshiId)}"></span>
@@ -1121,6 +1154,7 @@ function renderItemRow(it){
       <div class="item-meta">${escapeHtml(oshiName(it.oshiId))} ・ ${it.type}${it.venue? ' ・ '+escapeHtml(it.venue):''}${acctHint}</div>
       ${it.performers ? `<div class="item-meta">出演：${escapeHtml(it.performers)}</div>` : ''}
       ${dlLine}
+      ${rsLine}
     </div>
     <span class="badge status-${it.status}">${it.status}</span>
   </div>`;
